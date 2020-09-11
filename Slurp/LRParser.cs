@@ -127,7 +127,7 @@ namespace Slurp
         public Result Parse(IEnumerable<char> sequence)
         {
             var instance = new ParseInstance(initialState);
-            // var tmp = Tokenize(sequence).ToArray();
+            var tmp = Tokenize(sequence).ToArray();
             foreach(var tok in Tokenize(sequence))
             {
                 instance.Accept(tok);

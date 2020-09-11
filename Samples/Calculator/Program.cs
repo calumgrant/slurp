@@ -59,7 +59,7 @@ namespace Calculator
 
             // PrimaryExpression -> @decimal
             // The last argument is a function that transforms a token into a double (the result of the expression).
-            PrimaryExpression.Match(@decimal, x => double.Parse(x.Text));
+            PrimaryExpression.Match(@float, x => double.Parse(x.Text));
 
             PrimaryExpression.Match(nan, x => double.NaN);
             PrimaryExpression.Match(inf, x => double.PositiveInfinity);
@@ -72,16 +72,16 @@ namespace Calculator
             UnaryExpression.Match((Terminal)"ln", UnaryExpression, (x, y) => Math.Log(y));
             UnaryExpression.Match((Terminal)"sin", UnaryExpression, (x, y) => Math.Sin(y));
             UnaryExpression.Match((Terminal)"cos", UnaryExpression, (x, y) => Math.Cos(y));
-            UnaryExpression.Match((Terminal)"tab", UnaryExpression, (x, y) => Math.Tan(y));
+            UnaryExpression.Match((Terminal)"tan", UnaryExpression, (x, y) => Math.Tan(y));
             UnaryExpression.Match((Terminal)"exp", UnaryExpression, (x, y) => Math.Exp(y));
             UnaryExpression.Match((Terminal)"floor", UnaryExpression, (x, y) => Math.Floor(y));
 
             // AdditiveExpression -> AdditiveExpression + MultiplicativeExpression
-            AdditiveExpression.Match(AdditiveExpression, plus, MultiplicativeExpression, (x, y, z) => x + z);
+            AdditiveExpression.Match(AdditiveExpression, plus, UnaryExpression, (x, y, z) => x + z);
 
             // AdditiveExpression -> AdditiveExpression - MultiplicativeExpression
-            AdditiveExpression.Match(AdditiveExpression, minus, MultiplicativeExpression, (x, y, z) => x - z);
-            AdditiveExpression.Match(MultiplicativeExpression);
+            AdditiveExpression.Match(AdditiveExpression, minus, UnaryExpression, (x, y, z) => x - z);
+            AdditiveExpression.Match(UnaryExpression);
 
             MultiplicativeExpression.Match(AdditiveExpression);
             MultiplicativeExpression.Match(MultiplicativeExpression, (Terminal)'*', AdditiveExpression, (x, y, z) => x * z);
@@ -92,7 +92,7 @@ namespace Calculator
 
             // Expression -> PowerExpression
             // No need to supply a function here as the result is untransformed
-            Expression.Match(PowerExpression);
+            Expression.Match(MultiplicativeExpression);
 
             // Compiles a parser for the grammar.
             // A tokeniser is automatically generated as well, based on the terminal symbols
@@ -104,19 +104,24 @@ namespace Calculator
         static void Main(string[] args)
         {
             Console.WriteLine("Enter an expression:");
-            Console.Write("> ");
 
-            var line = Console.ReadLine();
             var parser = CreateParser();
 
-            try
+            string line = "";
+            do
             {
-                Console.WriteLine(parser.Parse(line));
+                try
+                {
+                    Console.Write("> ");
+                    line = Console.ReadLine();
+                    Console.WriteLine(parser.Parse(line));
+                }
+                catch (SyntaxError e)
+                {
+                    Console.WriteLine($"Syntax error at {e.ErrorToken.Text}");
+                }
             }
-            catch(SyntaxError e)
-            {
-                Console.WriteLine($"Syntax error at {e.ErrorToken.Text}");
-            }
+            while (!string.IsNullOrEmpty(line));
         }
     }
 }
