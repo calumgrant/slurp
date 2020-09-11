@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 
-namespace Parser
+namespace Slurp
 {
     public class SyntaxError : Exception
     {
@@ -10,7 +10,7 @@ namespace Parser
             ErrorToken = errorToken;
         }
 
-        Token ErrorToken { get; }
+        public Token ErrorToken { get; }
     }
 
     namespace DFA

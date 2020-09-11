@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Parser
+namespace Slurp
 {
     /// <summary>
     /// A symbol in a grammar.
@@ -116,7 +116,7 @@ namespace Parser
             }, r1, r2, r3);
         }
 
-        public IParser<Result> MakeParser(ParserGenerator algorithm) => new Parser<Result>(this, algorithm);
+        public IParser<Result> MakeParser(ParserGenerator algorithm = ParserGenerator.LALR) => new Parser<Result>(this, algorithm);
 
         public IEnumerable<ProductionRule> Rules => rules;
 

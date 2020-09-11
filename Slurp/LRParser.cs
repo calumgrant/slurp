@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
-namespace Parser
+namespace Slurp
 {
     /// <summary>
     /// A parser, that transforms a stream of characters into a resultant datatype.

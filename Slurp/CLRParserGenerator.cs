@@ -1,4 +1,4 @@
-﻿namespace Parser
+﻿namespace Slurp
 {
     /// <summary>
     /// A naive table generator that generates very large tables with many redundant states.

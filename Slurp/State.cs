@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Text;
 
-namespace Parser
+namespace Slurp
 {
     sealed class State
     {

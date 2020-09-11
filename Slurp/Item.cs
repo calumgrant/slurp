@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Text;
 
-namespace Parser
+namespace Slurp
 {
     /// <summary>
     /// An "item" in a item-set.

@@ -1,6 +1,6 @@
 ﻿using System.Linq;
 
-namespace Parser
+namespace Slurp
 {
     /// <summary>
     /// SLR(1) Parser Generator

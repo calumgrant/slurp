@@ -1,6 +1,6 @@
 ﻿using System.Linq;
 
-namespace Parser
+namespace Slurp
 {
     class LALRParserGenerator : LR0ParserGenerator
     {

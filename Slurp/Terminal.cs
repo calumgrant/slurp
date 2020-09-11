@@ -1,10 +1,10 @@
-﻿using Parser.DFA;
+﻿using Slurp.DFA;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Parser
+namespace Slurp
 {
     public sealed class Terminal : ITerminalSymbol
     {
@@ -18,7 +18,15 @@ namespace Parser
 
         public static Terminal Empty = new Terminal(DFA.EmptyState.Instance, "epsilon");
 
-        public static Terminal OneOf(params char[] chars) => throw new NotImplementedException();
+        public static Terminal OneOf(char ch1, params char[] chars)
+        {
+            Terminal result = ch1;
+            foreach(var ch in chars)
+            {
+                result = ch | result;
+            }
+            return result;
+        }
 
         public static Terminal operator !(Terminal t) => new Terminal(DFA.NotState.Create(t.automaton), "^...");
 

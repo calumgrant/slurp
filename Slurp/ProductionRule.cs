@@ -1,7 +1,7 @@
 ﻿using System.Linq;
 using System.Text;
 
-namespace Parser
+namespace Slurp
 {
     /// <summary>
     /// A grammar rule of the form
