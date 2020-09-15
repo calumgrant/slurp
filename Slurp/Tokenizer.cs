@@ -14,6 +14,12 @@ namespace Slurp
         public int TokenId;
 
         public override string ToString() => $"{Text} ({TokenId})";
+
+        public Token(string text, int id)
+        {
+            Text = text;
+            TokenId = id;
+        }
     }
 
     public class UnmatchableTokenException : Exception
@@ -106,41 +112,85 @@ namespace Slurp
         public IEnumerable<Token> Tokenize(IEnumerable<char> input)
         {
             State state = initialState;
-            var sb = new StringBuilder();
+            var sb = new StringBuilder();  // TODO: Use a deque
+            int acceptLength = 0;
+            int acceptToken = -1;
 
-            foreach(var ch in input)
+            void processChar(char ch)
             {
-                var acceptToken = state.acceptToken;
-
-                if(acceptToken == -2)
-                {
-                    // We are at a terminal reject state.
-                    yield return new Token() { Text = sb.ToString(), TokenId = -1 };
-                    sb.Clear();
-                    state = initialState;
-                }
-
-                // Advance 4 positions
-                state = state.transitions[(ch>>12)&15];
+                state = state.transitions[(ch >> 12) & 15];
                 state = state.transitions[(ch >> 8) & 15];
                 state = state.transitions[(ch >> 4) & 15];
                 state = state.transitions[ch & 15];
-
-                if(acceptToken>=0 && state.acceptToken<0)
-                {
-                    var result = new Token() { Text = sb.ToString(), TokenId = acceptToken };
-                    yield return result;
-
-                    state = initialState.transitions[(ch >> 12) & 15];
-                    state = state.transitions[(ch >> 8) & 15];
-                    state = state.transitions[(ch >> 4) & 15];
-                    state = state.transitions[ch & 15];
-                    sb.Clear();
-                }
                 sb.Append(ch);
             }
 
-            yield return new Token() { Text = sb.ToString(), TokenId = state.acceptToken>=0 ? state.acceptToken : -1 }; ;
+            foreach (var ch in input)
+            {
+                // -2 = reject
+                // -1 = not accept, but a future match could accept this.
+
+                processChar(ch);
+
+                if (state.acceptToken == -2)
+                {
+                    // A terminal reject state.
+
+                    var buf = sb.ToString();
+                    if (acceptLength > 0)
+                    {
+                        yield return new Token(buf.Substring(0, acceptLength), acceptToken);
+                    }
+
+                    sb.Clear();
+                    state = initialState;
+                    acceptToken = -1;
+                    int taillen = acceptLength;
+                    acceptLength = 0;
+
+                    // Re-scan the buffer (potentially expensive!)
+                    for(int l = taillen; l<buf.Length; ++l)
+                    {
+                        processChar(buf[l]);
+                        if(state.acceptToken == -2)
+                        {
+                            if (acceptLength > 0)
+                            {
+                                yield return new Token(sb.ToString().Substring(0, acceptLength), acceptToken);
+                            }
+                            else
+                            {
+                                yield return new Token(sb.ToString(), -1);
+                            }
+                            state = initialState;
+                            acceptToken = -1;
+                            acceptLength = 0;
+                            sb.Clear();
+                        }
+                        else if(state.acceptToken>=0)
+                        {
+                            acceptLength++;
+                            acceptToken = state.acceptToken;
+                        }
+                    }
+
+                }
+                else if(state.acceptToken >= 0)
+                {
+                    // An accept state
+
+                    acceptLength = sb.Length;
+                    acceptToken = state.acceptToken;
+                }
+
+            }
+
+            if (acceptLength > 0)
+            {
+                yield return new Token(sb.ToString().Substring(0, acceptLength), acceptToken);
+            }
+
+            // Could potentially have an unmatched string at the end
         }
     }
 }

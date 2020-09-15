@@ -121,7 +121,7 @@ namespace Slurp
             {
                 if (tok.TokenId >= 0) yield return tok;
             }
-            yield return new Token() { TokenId = eof.TerminalIndex };
+            yield return new Token("", eof.TerminalIndex);
         }
 
         public Result Parse(IEnumerable<char> sequence)

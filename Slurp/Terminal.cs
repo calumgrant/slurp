@@ -18,7 +18,7 @@ namespace Slurp
 
         public static Terminal Empty = new Terminal(DFA.EmptyState.Instance, "epsilon");
 
-        public static Terminal OneOf(char ch1, params char[] chars)
+        public static Terminal OneOf(Terminal ch1, params Terminal[] chars)
         {
             Terminal result = ch1;
             foreach(var ch in chars)

@@ -356,6 +356,41 @@ namespace tests
             // S.MakeParser(ParserGenerator.LR0);
             Assert.Throws<ReduceReduceConflict>(()=>S.MakeParser(ParserGenerator.SLR));
         }
+
+        [Test]
+
+        public void TestLexerRegression()
+        {
+            Terminal t1 = "123";
+            Terminal t2 = "12345";
+            var tok = new Tokenizer(t1, t2);
+            var tokens = tok.Tokenize("12345").ToArray();
+            Assert.AreEqual(1, tokens.Length);
+        }
+
+        [Test]
+        public void TestCalculator()
+        {
+            Terminal integer = Terminal.Range('1'..'9') + Terminal.Digit.Repeat(0..);
+
+            // The | operator selects a choice
+            Terminal @decimal = integer | (integer + '.' + Terminal.Digit.Repeat(0..)) | ('.' + Terminal.Digit.Repeat(0..));
+
+            // The OneOf method selects one of
+            Terminal @float = @decimal + (Terminal.OneOf('e', 'E') + Terminal.OneOf('+', '-').Repeat(0..1) + integer).Repeat(0..1);
+
+            Terminal @float1 = Terminal.OneOf("123",  "123e-12", "123e12");
+
+            var tok = new Tokenizer(@float1);
+            var tokens = tok.Tokenize("123").ToArray();
+            Assert.AreEqual(1, tokens.Length);
+            var tokens1 = tok.Tokenize("123e12").ToArray();
+            Assert.AreEqual(1, tokens1.Length);
+            var tokens2 = tok.Tokenize("123e-12").ToArray();
+            Assert.AreEqual(1, tokens2.Length);
+//            var tokens3 = tok.Tokenize("123e+12").ToArray();
+//            Assert.AreEqual(1, tokens3.Length);
+        }
     }
 
     class ExampleGrammar

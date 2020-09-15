@@ -27,7 +27,7 @@ namespace Calculator
             Terminal @decimal = integer | (integer + '.' + Terminal.Digit.Repeat(0..)) | ('.' + Terminal.Digit.Repeat(0..));
 
             // The OneOf method selects one of
-            Terminal @float = @decimal + (Terminal.OneOf('e', 'E') + (Terminal.OneOf('+', '-').Repeat(0..1) + integer)).Repeat(0..1);
+            Terminal @float = @decimal + (Terminal.OneOf('e', 'E') + Terminal.OneOf('+', '-').Repeat(0..1) + integer).Repeat(0..1);
 
             // A terminal consisting of a single character, +
             Terminal plus = '+';
@@ -92,7 +92,7 @@ namespace Calculator
 
             // Expression -> PowerExpression
             // No need to supply a function here as the result is untransformed
-            Expression.Match(MultiplicativeExpression);
+            Expression.Match(AdditiveExpression);
 
             // Compiles a parser for the grammar.
             // A tokeniser is automatically generated as well, based on the terminal symbols
@@ -114,6 +114,8 @@ namespace Calculator
                 {
                     Console.Write("> ");
                     line = Console.ReadLine();
+                    foreach (var token in parser.Tokenizer.Tokenize(line))
+                        Console.WriteLine(token);
                     Console.WriteLine(parser.Parse(line));
                 }
                 catch (SyntaxError e)
