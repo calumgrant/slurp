@@ -43,12 +43,12 @@ namespace Calculator
             Terminal close = ')';
 
             //  The "non-terminal symbols" of the grammar
-            var Expression = new Symbol<double>();
-            var PrimaryExpression = new Symbol<double>();
-            var AdditiveExpression = new Symbol<double>();
-            var MultiplicativeExpression = new Symbol<double>();
-            var PowerExpression = new Symbol<double>();
-            var UnaryExpression = new Symbol<double>();
+            var Expression = new Symbol<double>("expr");
+            var PrimaryExpression = new Symbol<double>("primary-expr");
+            var AdditiveExpression = new Symbol<double>("additive-expr");
+            var MultiplicativeExpression = new Symbol<double>("multiplicative-expr");
+            var PowerExpression = new Symbol<double>("pow-expr");
+            var UnaryExpression = new Symbol<double>("unary-expr");
 
             // Define the rules of the grammar
             
@@ -92,6 +92,7 @@ namespace Calculator
 
             // Expression -> PowerExpression
             // No need to supply a function here as the result is untransformed
+            //Expression.Match(AdditiveExpression);
             Expression.Match(AdditiveExpression);
 
             // Compiles a parser for the grammar.
@@ -114,8 +115,8 @@ namespace Calculator
                 {
                     Console.Write("> ");
                     line = Console.ReadLine();
-                    foreach (var token in parser.Tokenizer.Tokenize(line))
-                        Console.WriteLine(token);
+                    //foreach (var token in parser.Tokenizer.Tokenize(line))
+                    //    Console.WriteLine(token);
                     Console.WriteLine(parser.Parse(line));
                 }
                 catch (SyntaxError e)

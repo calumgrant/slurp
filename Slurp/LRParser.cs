@@ -34,8 +34,12 @@ namespace Slurp
 
         ParseAction ParseAction(State s, ITerminalSymbol t);
 
-        State CreateTransition(State state, ISymbol s);
+        State CreateGoto(State state, ISymbol s);
 
+        /// <summary>
+        /// Closes the state by adding addition items that could be matched.
+        /// </summary>
+        /// <param name="state"></param>
         void ExpandClosure(State state);
     }
 
@@ -121,13 +125,13 @@ namespace Slurp
             {
                 if (tok.TokenId >= 0) yield return tok;
             }
-            yield return new Token("", eof.TerminalIndex);
+            yield return new Token("<eof>", eof.TerminalIndex);
         }
 
         public Result Parse(IEnumerable<char> sequence)
         {
             var instance = new ParseInstance(initialState);
-            var tmp = Tokenize(sequence).ToArray();
+            // var tmp = Tokenize(sequence).ToArray();
             foreach(var tok in Tokenize(sequence))
             {
                 instance.Accept(tok);
@@ -270,6 +274,7 @@ namespace Slurp
             // The initial state.
 
             initialState = strategy.CreateInitialState(startSymbol);
+            strategy.ExpandClosure(initialState);
             visitedStates.Add(initialState);
 
             // Compute transitions for the state
@@ -283,7 +288,7 @@ namespace Slurp
 
         private State Transition(State from, ISymbol symbol)
         {
-            var to = strategy.CreateTransition(from, symbol);
+            var to = strategy.CreateGoto(from, symbol);
 
             strategy.ExpandClosure(to);
 

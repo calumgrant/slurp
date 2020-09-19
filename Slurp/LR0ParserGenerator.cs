@@ -43,7 +43,7 @@ namespace Slurp
             }
         }
 
-        public State CreateTransition(State from, ISymbol next)
+        public State CreateGoto(State from, ISymbol next)
         {
             var s = new State();
             foreach(var item in from.items)

@@ -9,6 +9,11 @@ namespace Slurp
             if (state.IsEmpty)
                 return SyntaxError;
 
+            // If the goto state is an error then this is a syntax error
+            // TODO: Report which symbols could be accepted.
+            //if (state.terminalGotos[symbol.TerminalIndex].IsEmpty)
+            //    return SyntaxError;
+
             // If any of the rules allow a shift, do that (ignoring potential reduces)
             if (state.items.Any(i => !i.AtEnd))
             {

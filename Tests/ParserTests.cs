@@ -379,17 +379,34 @@ namespace tests
             // The OneOf method selects one of
             Terminal @float = @decimal + (Terminal.OneOf('e', 'E') + Terminal.OneOf('+', '-').Repeat(0..1) + integer).Repeat(0..1);
 
-            Terminal @float1 = Terminal.OneOf("123",  "123e-12", "123e12");
-
-            var tok = new Tokenizer(@float1);
+            var tok = new Tokenizer(@float);
             var tokens = tok.Tokenize("123").ToArray();
             Assert.AreEqual(1, tokens.Length);
             var tokens1 = tok.Tokenize("123e12").ToArray();
             Assert.AreEqual(1, tokens1.Length);
             var tokens2 = tok.Tokenize("123e-12").ToArray();
             Assert.AreEqual(1, tokens2.Length);
-//            var tokens3 = tok.Tokenize("123e+12").ToArray();
-//            Assert.AreEqual(1, tokens3.Length);
+            var tokens3 = tok.Tokenize("123e+12").ToArray();
+            Assert.AreEqual(1, tokens3.Length);
+
+            // Test the grammar as well.
+        }
+
+        [Test]
+        public void testCLR1()
+        {
+            // See https://www.youtube.com/watch?v=UOVQQq_dOn8
+            Terminal c = 'c';
+            Terminal d = 'd';
+
+            Symbol<int> S = new Symbol<int>("S");
+            Symbol<int> C = new Symbol<int>("C");
+
+            S.Match(C, C, (a, b) => a + b);
+            C.Match(c, C, (x, y) => 2 + y);
+            C.Match(d, x => 1);
+
+            var p = S.MakeParser(ParserGenerator.CLR);
         }
     }
 
