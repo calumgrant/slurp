@@ -6,14 +6,6 @@ namespace Calculator
 {
     class Program
     {
-        // An incorrect factorial function
-        static double Factorial(double n)
-        {
-            if (n < 0) return double.NaN;
-            if (n < 1) return 1;
-            return n * Factorial(n - 1);
-        }
-
         /// <summary>
         /// Defines the parser.
         /// </summary>
@@ -39,41 +31,43 @@ namespace Calculator
             // A terminal consisting of a single character, +
             Terminal plus = '+';
             Terminal minus = '-';
-            Terminal times = '*';
-            Terminal slash = '/';
-            Terminal nan = "nan";
-            Terminal inf = "inf";
 
-            // A terminal consisting of a string, **
-            Terminal starstar = "**";
-            Terminal open = '(';
-            Terminal close = ')';
-
-            //  The "non-terminal symbols" of the grammar
-            var Expression = new Symbol<double>("expr");
-            var PrimaryExpression = new Symbol<double>("primary-expr");
-            var AdditiveExpression = new Symbol<double>("additive-expr");
-            var MultiplicativeExpression = new Symbol<double>("multiplicative-expr");
-            var UnaryExpression = new Symbol<double>("unary-expr");
-            var PostfixExpression = new Symbol<double>("postfix");
+            // The "non-terminal symbols" of the grammar.
+            // In the calculator grammar, all non-terminal symbols generate a
+            // "double" when the are parsed.
+            var Expression = new Symbol<double>();
+            var PrimaryExpression = new Symbol<double>();
+            var AdditiveExpression = new Symbol<double>();
+            var MultiplicativeExpression = new Symbol<double>();
+            var UnaryExpression = new Symbol<double>();
+            var PostfixExpression = new Symbol<double>();
 
             // Define the rules of the grammar
 
-            // PrimaryExpression -> ( Expression )
-            // The last argument is a function that takes the result of the three sub-rules,
+            // Add a rule to the PrimaryExpression symbol.
+            // The "Match" function takes a sequence of terminals,
+            // and the last argument is a function that takes the result of the three sub-rules,
             // and returns a double, the result of the expression.
-            PrimaryExpression.Match(open, Expression, close, (x,y,z) => y);
+            PrimaryExpression.Match((Terminal)'(', Expression, (Terminal)')', (x,y,z) => y);
 
             // The last argument is a function that transforms a token into a double (the result of the expression).
+            // This rule converts a Token into a "double".
             PrimaryExpression.Match(@float, x => double.Parse(x.Text));
 
-            PrimaryExpression.Match(nan, x => double.NaN);
-            PrimaryExpression.Match(inf, x => double.PositiveInfinity);
-            PrimaryExpression.Match((Terminal)"pi", x => Math.PI);
-            PrimaryExpression.Match((Terminal)"e", x => Math.E);
+            // This rule converts a token "nan" into a double with value "Nan".
+            // since the token is always the text "nan", we can discard the text of the token.
+            PrimaryExpression.Match((Terminal)"nan", _ => double.NaN);
+            PrimaryExpression.Match((Terminal)"inf", _ => double.PositiveInfinity);
+            PrimaryExpression.Match((Terminal)"pi", _ => Math.PI);
+            PrimaryExpression.Match((Terminal)"e", _ => Math.E);
 
             PostfixExpression.Match(PrimaryExpression);
             PostfixExpression.Match(PostfixExpression, (Terminal)'!', (x, y) => Factorial(x));
+
+            // Note that the ^ operator associates to the right,
+            // which means that the expression 2^3^4 is parsed as 2^(3^4).
+            // This is unlike the + and * operators which associate to the left.
+            // This is acheived by the following rule:
             PostfixExpression.Match(PrimaryExpression, (Terminal)'^', PostfixExpression, (x, y, z) => Math.Pow(x, z));
 
             UnaryExpression.Match(PostfixExpression);
@@ -96,10 +90,9 @@ namespace Calculator
 
             Expression.Match(AdditiveExpression);
 
-            // Compiles a parser for the grammar.
-            // A tokeniser is automatically generated as well, based on the terminal symbols
-            // that occur in the grammar.
-            // It is also possible to tweak the tokenizer, but that's not needed in this simple case.
+            // MakeParser compiles a parser for the grammar.
+            // A tokeniser is automatically generated as well, based on the terminal symbols that occur in the grammar.
+            // It is possible to tweak the tokenizer, but that's not needed in this simple case.
             return Expression.MakeParser(ParserGenerator.CLR);
         }
 
@@ -116,8 +109,6 @@ namespace Calculator
                 {
                     Console.Write("> ");
                     line = Console.ReadLine();
-                    //foreach (var token in parser.Tokenizer.Tokenize(line))
-                    //    Console.WriteLine(token);
                     Console.WriteLine(parser.Parse(line));
                 }
                 catch (SyntaxError e)
@@ -126,6 +117,16 @@ namespace Calculator
                 }
             }
             while (!string.IsNullOrEmpty(line));
+        }
+
+        // An incorrect factorial function
+        // Factorial isn't defined for non-integers.
+        static double Factorial(double n)
+        {
+            if (n < 0) return double.NaN;
+            double result = 1;
+            for (; n > 1; result = result * n, n = n - 1) ;
+            return result;
         }
     }
 }
