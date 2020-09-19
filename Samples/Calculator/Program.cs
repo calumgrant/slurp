@@ -6,6 +6,14 @@ namespace Calculator
 {
     class Program
     {
+        // An incorrect factorial function
+        static double Factorial(double n)
+        {
+            if (n < 0) return double.NaN;
+            if (n < 1) return 1;
+            return n * Factorial(n - 1);
+        }
+
         /// <summary>
         /// Defines the parser.
         /// </summary>
@@ -20,7 +28,7 @@ namespace Calculator
             // * + ? {} found in regular expressions
             // Terminal.Digit is shorthand for Terminal.Range('0'..'9')
             // Terminal.Range matches a range of charaters
-            Terminal integer = Terminal.Range('1'..'9') + Terminal.Digit.Repeat(0..);
+            Terminal integer = '0' | Terminal.Range('1'..'9') + Terminal.Digit.Repeat(0..);
 
             // The | operator selects a choice
             Terminal @decimal = integer | (integer + '.' + Terminal.Digit.Repeat(0..)) | ('.' + Terminal.Digit.Repeat(0..));
@@ -46,17 +54,16 @@ namespace Calculator
             var PrimaryExpression = new Symbol<double>("primary-expr");
             var AdditiveExpression = new Symbol<double>("additive-expr");
             var MultiplicativeExpression = new Symbol<double>("multiplicative-expr");
-            var PowerExpression = new Symbol<double>("pow-expr");
             var UnaryExpression = new Symbol<double>("unary-expr");
+            var PostfixExpression = new Symbol<double>("postfix");
 
             // Define the rules of the grammar
-            
+
             // PrimaryExpression -> ( Expression )
             // The last argument is a function that takes the result of the three sub-rules,
             // and returns a double, the result of the expression.
             PrimaryExpression.Match(open, Expression, close, (x,y,z) => y);
 
-            // PrimaryExpression -> @decimal
             // The last argument is a function that transforms a token into a double (the result of the expression).
             PrimaryExpression.Match(@float, x => double.Parse(x.Text));
 
@@ -65,7 +72,11 @@ namespace Calculator
             PrimaryExpression.Match((Terminal)"pi", x => Math.PI);
             PrimaryExpression.Match((Terminal)"e", x => Math.E);
 
-            UnaryExpression.Match(PrimaryExpression);
+            PostfixExpression.Match(PrimaryExpression);
+            PostfixExpression.Match(PostfixExpression, (Terminal)'!', (x, y) => Factorial(x));
+            PostfixExpression.Match(PrimaryExpression, (Terminal)'^', PostfixExpression, (x, y, z) => Math.Pow(x, z));
+
+            UnaryExpression.Match(PostfixExpression);
             UnaryExpression.Match(plus, UnaryExpression, (x, y) => y);
             UnaryExpression.Match(minus, UnaryExpression, (x, y) => -y);
             UnaryExpression.Match((Terminal)"ln", UnaryExpression, (x, y) => Math.Log(y));
@@ -75,27 +86,15 @@ namespace Calculator
             UnaryExpression.Match((Terminal)"exp", UnaryExpression, (x, y) => Math.Exp(y));
             UnaryExpression.Match((Terminal)"floor", UnaryExpression, (x, y) => Math.Floor(y));
 
-            // AdditiveExpression -> AdditiveExpression + MultiplicativeExpression
-            AdditiveExpression.Match(AdditiveExpression, plus, UnaryExpression, (x, y, z) => x + z);
+            MultiplicativeExpression.Match(UnaryExpression);
+            MultiplicativeExpression.Match(MultiplicativeExpression, (Terminal)'*', UnaryExpression, (x, y, z) => x * z);
+            MultiplicativeExpression.Match(MultiplicativeExpression, (Terminal)'/', UnaryExpression, (x, y, z) => x / z);
 
+            AdditiveExpression.Match(AdditiveExpression, plus, MultiplicativeExpression, (x, y, z) => x + z);
+            AdditiveExpression.Match(AdditiveExpression, minus, MultiplicativeExpression, (x, y, z) => x - z);
+            AdditiveExpression.Match(MultiplicativeExpression);
 
-            // TODO: Factorial
-
-            // AdditiveExpression -> AdditiveExpression - MultiplicativeExpression
-            AdditiveExpression.Match(AdditiveExpression, minus, UnaryExpression, (x, y, z) => x - z);
-            AdditiveExpression.Match(UnaryExpression);
-
-            MultiplicativeExpression.Match(AdditiveExpression);
-            MultiplicativeExpression.Match(MultiplicativeExpression, (Terminal)'*', AdditiveExpression, (x, y, z) => x * z);
-            MultiplicativeExpression.Match(MultiplicativeExpression, (Terminal)'/', AdditiveExpression, (x, y, z) => x / z);
-
-            PowerExpression.Match(MultiplicativeExpression);
-            PowerExpression.Match(MultiplicativeExpression, starstar, PowerExpression, (x, y, z) => Math.Pow(x, z));
-
-            // Expression -> PowerExpression
-            // No need to supply a function here as the result is untransformed
-            //Expression.Match(AdditiveExpression);
-            Expression.Match(MultiplicativeExpression);
+            Expression.Match(AdditiveExpression);
 
             // Compiles a parser for the grammar.
             // A tokeniser is automatically generated as well, based on the terminal symbols

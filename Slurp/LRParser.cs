@@ -81,6 +81,9 @@ namespace Slurp
         /// </summary>
         /// <param name="token">The token at which the error occured.</param>
         void Error(Token token);
+
+
+        bool AtEnd { get; }
     }
 
     public enum ParserGenerator
@@ -137,6 +140,9 @@ namespace Slurp
                 instance.Accept(tok);
             }
             instance.Pop(); // Shift off the $ token 
+
+            if (!instance.AtEnd)
+                throw new SyntaxError(new Token("<eof>", eof.TerminalIndex));
 
             return (Result)instance.Pop();
         }
@@ -340,6 +346,8 @@ namespace Slurp
         }
 
         public State Current => stack.Peek().state;
+
+        public bool AtEnd => stack.Count <= 2;
 
         public void Accept(Token token)
         {

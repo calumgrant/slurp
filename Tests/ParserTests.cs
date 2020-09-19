@@ -393,7 +393,7 @@ namespace tests
         }
 
         [Test]
-        public void testCLR1()
+        public void TestCLR1()
         {
             // See https://www.youtube.com/watch?v=UOVQQq_dOn8
             // S -> CC
@@ -411,9 +411,9 @@ namespace tests
             var p = S.MakeParser(ParserGenerator.CLR);
 
             Assert.AreEqual(2, p.Parse("dd"));
-            p.Parse("cdcd");
-            p.Parse("ccccccdd");
-            p.Parse("dcccd");
+            Assert.AreEqual(6, p.Parse("cdcd"));
+            Assert.AreEqual(14, p.Parse("ccccccdd"));
+            Assert.AreEqual(8, p.Parse("dcccd"));
 
             Assert.Throws<SyntaxError>(() => p.Parse("cc"));
         }
