@@ -1,5 +1,4 @@
 ﻿using System;
-
 using Slurp;
 
 
@@ -11,7 +10,7 @@ namespace Calculator
         /// Defines the parser.
         /// </summary>
         /// <returns>A parser that converts a string to a double.</returns>
-        static IParser<double> CreateParser()
+        internal static IParser<double> CreateParser()
         {
             // The "terminal symbols" of the grammar
 
@@ -79,6 +78,9 @@ namespace Calculator
             // AdditiveExpression -> AdditiveExpression + MultiplicativeExpression
             AdditiveExpression.Match(AdditiveExpression, plus, UnaryExpression, (x, y, z) => x + z);
 
+
+            // TODO: Factorial
+
             // AdditiveExpression -> AdditiveExpression - MultiplicativeExpression
             AdditiveExpression.Match(AdditiveExpression, minus, UnaryExpression, (x, y, z) => x - z);
             AdditiveExpression.Match(UnaryExpression);
@@ -93,13 +95,13 @@ namespace Calculator
             // Expression -> PowerExpression
             // No need to supply a function here as the result is untransformed
             //Expression.Match(AdditiveExpression);
-            Expression.Match(AdditiveExpression);
+            Expression.Match(MultiplicativeExpression);
 
             // Compiles a parser for the grammar.
             // A tokeniser is automatically generated as well, based on the terminal symbols
             // that occur in the grammar.
             // It is also possible to tweak the tokenizer, but that's not needed in this simple case.
-            return Expression.MakeParser();
+            return Expression.MakeParser(ParserGenerator.CLR);
         }
 
         static void Main(string[] args)

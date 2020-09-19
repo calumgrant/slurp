@@ -79,9 +79,29 @@ namespace Slurp
             return obj.GetHashCode();
         }
 
-        public ParseAction ParseAction(State s, ITerminalSymbol t)
+        static void Error(Token next, IParseActions parser)
         {
-            throw new System.NotImplementedException();
+            parser.Error(next);
+        }
+
+        public ParseAction ParseAction(State state, ITerminalSymbol symbol)
+        {
+            if(state.IsEmpty)
+                return Error;
+
+            var matchingItems = state.items.Where(i => i.AtEnd && i.Lookahead[0] == symbol);
+
+            if(matchingItems.Count() == 1)
+            {
+                return (token, parser) => state.items.First().Rule.function(token, parser);
+            }
+            if(matchingItems.Count() > 1)
+            {
+                throw new ReduceReduceConflict(matchingItems.ElementAt(0).Rule, matchingItems.ElementAt(1).Rule);
+            }
+
+            // Default is to shift the symbol onto the stack
+            return (token, parser) => parser.Shift(token, state.terminalGotos[symbol.TerminalIndex]);
         }
     }
 }

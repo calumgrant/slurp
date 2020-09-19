@@ -76,11 +76,19 @@ namespace Slurp
             {
                 ProductionRule rule = e.Rule;
 
-                for (int index = e.DotPosition+1; index < rule.rhs.Length; ++index)
+                int index;
+                for (index = e.DotPosition+1; index < rule.rhs.Length; ++index)
                 {
                     foreach (var t in rule.rhs[index].First)
                         result.Add(t);
                     if (!rule.rhs[index].CanBeEmpty) break;
+                }
+
+                if(index == rule.rhs.Length)
+                {
+                    // This wasn't documented properly I don't think
+                    // Also add the lookahead of the matched item if the rule can match at the end of the rule.
+                    result.Add(e.Lookahead[0]);
                 }
             }
 

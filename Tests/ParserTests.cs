@@ -396,6 +396,8 @@ namespace tests
         public void testCLR1()
         {
             // See https://www.youtube.com/watch?v=UOVQQq_dOn8
+            // S -> CC
+            // C -> cC | d;
             Terminal c = 'c';
             Terminal d = 'd';
 
@@ -407,6 +409,13 @@ namespace tests
             C.Match(d, x => 1);
 
             var p = S.MakeParser(ParserGenerator.CLR);
+
+            Assert.AreEqual(2, p.Parse("dd"));
+            p.Parse("cdcd");
+            p.Parse("ccccccdd");
+            p.Parse("dcccd");
+
+            Assert.Throws<SyntaxError>(() => p.Parse("cc"));
         }
     }
 
