@@ -16,6 +16,8 @@ namespace Slurp
 
         public static Terminal Eof => new Terminal(DFA.RejectState.Instance, "$");
 
+        public bool IsEof => automaton == DFA.RejectState.Instance;
+
         public static Terminal Empty = new Terminal(DFA.EmptyState.Instance, "epsilon");
 
         public static Terminal OneOf(Terminal ch1, params Terminal[] chars)

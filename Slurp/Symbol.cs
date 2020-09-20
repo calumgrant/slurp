@@ -36,6 +36,8 @@ namespace Slurp
     public interface ITerminalSymbol : ISymbol<Token>
     {
         int TerminalIndex { get; set; }
+
+        bool IsEof { get; }
     }
 
     public interface INonterminalSymbol : ISymbol

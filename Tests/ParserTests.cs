@@ -416,6 +416,8 @@ namespace tests
             Assert.AreEqual(8, p.Parse("dcccd"));
 
             Assert.Throws<SyntaxError>(() => p.Parse("cc"));
+
+            Assert.Throws<SyntaxError>(() => p.Parse(""));
         }
     }
 

@@ -62,7 +62,6 @@ namespace Slurp
         /// <param name="pushedSymbol">The symbol being pushed.</param>
         void Reduce(Token lookahead, object value, INonterminalSymbol pushedSymbol);
 
-
         /// <summary>
         /// Shifts a token onto the stack.
         /// </summary>
@@ -82,8 +81,7 @@ namespace Slurp
         /// <param name="token">The token at which the error occured.</param>
         void Error(Token token);
 
-
-        bool AtEnd { get; }
+        bool ParseSuccess { get; set; }
     }
 
     public enum ParserGenerator
@@ -134,16 +132,16 @@ namespace Slurp
         public Result Parse(IEnumerable<char> sequence)
         {
             var instance = new ParseInstance(initialState);
-            // var tmp = Tokenize(sequence).ToArray();
+
             foreach(var tok in Tokenize(sequence))
             {
                 instance.Accept(tok);
             }
-            instance.Pop(); // Shift off the $ token 
 
-            if (!instance.AtEnd)
+            if (!instance.ParseSuccess)
                 throw new SyntaxError(new Token("<eof>", eof.TerminalIndex));
 
+            instance.Pop();
             return (Result)instance.Pop();
         }
 
@@ -347,7 +345,7 @@ namespace Slurp
 
         public State Current => stack.Peek().state;
 
-        public bool AtEnd => stack.Count <= 2;
+        public bool ParseSuccess { get; set; }
 
         public void Accept(Token token)
         {

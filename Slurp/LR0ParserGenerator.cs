@@ -70,6 +70,13 @@ namespace Slurp
             // Are any of the items "reduce"
             if (state.items.Count==1 && state.items.First().AtEnd)
             {
+                if (symbol.IsEof)
+                    return (token, parser) =>
+                    {
+                        state.items.First().Rule.function(token, parser);
+                        parser.ParseSuccess = true;
+                    };
+
                 // This is a "reduce" action
                 return (token, parser) => state.items.First().Rule.function(token, parser);
             }

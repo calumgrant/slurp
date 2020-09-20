@@ -93,8 +93,16 @@ namespace Slurp
 
             if(matchingItems.Count() == 1)
             {
+                if (symbol.IsEof)
+                    return (token, parser) =>
+                    {
+                        state.items.First().Rule.function(token, parser);
+                        parser.ParseSuccess = true;
+                    };
+
                 return (token, parser) => state.items.First().Rule.function(token, parser);
             }
+
             if(matchingItems.Count() > 1)
             {
                 throw new ReduceReduceConflict(matchingItems.ElementAt(0).Rule, matchingItems.ElementAt(1).Rule);
