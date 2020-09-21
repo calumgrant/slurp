@@ -81,7 +81,7 @@ namespace Slurp
 
         static void Error(Token next, IParseActions parser)
         {
-            parser.SyntaxError(next, new int[0]);
+            parser.SyntaxError(next);
         }
 
         public ParseAction ParseAction(State state, ITerminalSymbol symbol)
@@ -100,6 +100,8 @@ namespace Slurp
                         parser.ParseSuccess = true;
                     };
 
+                state.ValidInputs[symbol.TerminalIndex] = true;
+
                 return (token, parser) => state.items.First().Rule.function(token, parser);
             }
 
@@ -112,9 +114,13 @@ namespace Slurp
             if(targetState.IsEmpty)
             {
                 // This is a syntax error.
-                // The valid gotos are given in the state.terminalGotos                
-                return (token, parser) => parser.SyntaxError(token, Enumerable.Range(0, state.terminalGotos.Length).Where(n => !state.terminalGotos[n].IsEmpty).ToArray());
+                // The valid gotos are given in the state.terminalGotos
+                // Bug: This excludes symbols that could be shifted following a reduction.
+                // therefore this doesn't really work...
+                return (token, parser) => parser.SyntaxError(token);
             }
+
+            state.ValidInputs[symbol.TerminalIndex] = true;
 
             // Default is to shift the symbol onto the stack
             return (token, parser) => parser.Shift(token, state.terminalGotos[symbol.TerminalIndex]);

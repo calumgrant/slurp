@@ -61,6 +61,7 @@ namespace Calculator
 
             // The OneOf method selects one of
             Terminal @float = @decimal + (Terminal.OneOf('e', 'E') + Terminal.OneOf('+', '-').Repeat(0..1) + integer).Repeat(0..1);
+            @float.Name = "num";
 
             // A terminal consisting of a single character, +
             Terminal plus = '+';

@@ -35,12 +35,12 @@ namespace Slurp
         private Terminal(DFA.IAutomaton state, string debug = "?")
         {
             automaton = state;
-            debugText = debug;
+            Name = debug;
         }
 
-        public override string ToString() => debugText;
+        public string Name { get; set; }
 
-        readonly string debugText;
+        public override string ToString() => Name;
 
         public static Terminal Seq(Terminal t1, Terminal t2)
         {

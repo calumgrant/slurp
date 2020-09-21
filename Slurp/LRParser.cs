@@ -79,7 +79,7 @@ namespace Slurp
         /// Report a parse error.
         /// </summary>
         /// <param name="token">The token at which the error occured.</param>
-        void SyntaxError(Token token, int[] validTokens);
+        void SyntaxError(Token token);
 
         bool ParseSuccess { get; set; }
     }
@@ -283,8 +283,13 @@ namespace Slurp
 
             // Compute transitions for the state
 
-            ComputeActions(initialState);
             ComputeGotos(initialState);
+            // ComputeActions(initialState);
+
+            // Compute actions for all states.
+
+            foreach (var state in visitedStates)
+                ComputeActions(state);
         }
 
 
@@ -299,15 +304,13 @@ namespace Slurp
             if (visitedStates.TryGetValue(to, out State existingState))
                 return existingState;
             visitedStates.Add(to);
-            ComputeActions(to);
             ComputeGotos(to);
+            // ComputeActions(to);
             return to;
         }
 
         private void ComputeActions(State state)
         {
-            state.terminalGotos ??= terminals.Select(t => Transition(state, t)).ToArray();
-
             /* https://en.wikipedia.org/wiki/LR_parser#Table_construction
                 Constructing the action and goto tables
                 From this table and the found item sets, the action and goto table are constructed as follows:
@@ -318,11 +321,14 @@ namespace Slurp
                 4. If an item set i contains an item of the form A → w • and A → w is rule m with m > 0 then the row for state i in the action table is completely filled with the reduce action rm.
              */
 
+            state.ValidInputs = new bool[terminals.Count];
+
             state.actions ??= terminals.Select(t => strategy.ParseAction(state, t)).ToArray();
         }
 
         private void ComputeGotos(State state)
         {
+            state.terminalGotos ??= terminals.Select(t => Transition(state, t)).ToArray();
             state.nonterminalGotos ??= nonterminals.Select(t => Transition(state, t)).ToArray();
         }
     }
@@ -354,9 +360,12 @@ namespace Slurp
             Current.actions[token.TokenId](token, this);
         }
 
-        public void SyntaxError(Token token, int[] expectedTokens)
+        public void SyntaxError(Token token)
         {
-            throw new SyntaxError(token, expectedTokens.Select(i => terminalSymbols[i]).ToArray());
+            var expected = Enumerable.Range(0, terminalSymbols.Length).
+                Where(t => Current.ValidInputs[t]).Select(t => terminalSymbols[t]);
+
+            throw new SyntaxError(token, expected);
         }
 
         public object Pop() => stack.Pop().value;

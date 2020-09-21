@@ -59,7 +59,7 @@ namespace Slurp
 
         static protected void SyntaxError(Token next, IParseActions actions)
         {
-            actions.SyntaxError(next, new int[0]);
+            actions.SyntaxError(next);
         }
 
         public virtual ParseAction ParseAction(State state, ITerminalSymbol symbol)

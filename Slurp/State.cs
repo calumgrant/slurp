@@ -19,6 +19,9 @@ namespace Slurp
         // The item-set in the current state.
         internal HashSet<Item> items = new HashSet<Item>();
 
+        // A vector 
+        public bool[] ValidInputs;
+
         internal State()
         {
         }
