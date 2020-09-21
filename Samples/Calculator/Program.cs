@@ -14,6 +14,7 @@
  */
 
 using System;
+using System.Linq;
 using Slurp;
 
 namespace Calculator
@@ -149,6 +150,15 @@ namespace Calculator
                 catch (SyntaxError e)
                 {
                     Console.WriteLine($"Syntax error at {e.ErrorToken.Text}");
+                    if(e.ExpectedSymbols.Any())
+                    {
+                        Console.Write("Expected: ");
+                        foreach (var s in e.ExpectedSymbols)
+                        {
+                            Console.Write(s); Console.Write(" ");
+                        }
+                        Console.WriteLine();
+                    }
                 }
             }
             while (!string.IsNullOrEmpty(line));

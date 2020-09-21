@@ -79,7 +79,7 @@ namespace Slurp
         /// Report a parse error.
         /// </summary>
         /// <param name="token">The token at which the error occured.</param>
-        void Error(Token token);
+        void SyntaxError(Token token, int[] validTokens);
 
         bool ParseSuccess { get; set; }
     }
@@ -131,7 +131,7 @@ namespace Slurp
 
         public Result Parse(IEnumerable<char> sequence)
         {
-            var instance = new ParseInstance(initialState);
+            var instance = new ParseInstance(initialState, terminals.ToArray());
 
             foreach(var tok in Tokenize(sequence))
             {
@@ -139,7 +139,7 @@ namespace Slurp
             }
 
             if (!instance.ParseSuccess)
-                throw new SyntaxError(new Token("<eof>", eof.TerminalIndex));
+                throw new SyntaxError(new Token("<eof>", eof.TerminalIndex), new ITerminalSymbol[0]);
 
             instance.Pop();
             return (Result)instance.Pop();
@@ -336,9 +336,11 @@ namespace Slurp
     class ParseInstance : IParseActions
     {
         Stack<StackItem> stack;
+        ITerminalSymbol[] terminalSymbols;
 
-        internal ParseInstance(State initialState)
+        internal ParseInstance(State initialState, ITerminalSymbol[] terminals)
         {
+            terminalSymbols = terminals;
             stack = new Stack<StackItem>();
             stack.Push(new StackItem(initialState, null));
         }
@@ -352,9 +354,9 @@ namespace Slurp
             Current.actions[token.TokenId](token, this);
         }
 
-        public void Error(Token token)
+        public void SyntaxError(Token token, int[] expectedTokens)
         {
-            throw new SyntaxError(token);
+            throw new SyntaxError(token, expectedTokens.Select(i => terminalSymbols[i]).ToArray());
         }
 
         public object Pop() => stack.Pop().value;

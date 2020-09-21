@@ -81,7 +81,7 @@ namespace Slurp
 
         static void Error(Token next, IParseActions parser)
         {
-            parser.Error(next);
+            parser.SyntaxError(next, new int[0]);
         }
 
         public ParseAction ParseAction(State state, ITerminalSymbol symbol)
@@ -106,6 +106,14 @@ namespace Slurp
             if(matchingItems.Count() > 1)
             {
                 throw new ReduceReduceConflict(matchingItems.ElementAt(0).Rule, matchingItems.ElementAt(1).Rule);
+            }
+
+            var targetState = state.terminalGotos[symbol.TerminalIndex];
+            if(targetState.IsEmpty)
+            {
+                // This is a syntax error.
+                // The valid gotos are given in the state.terminalGotos                
+                return (token, parser) => parser.SyntaxError(token, Enumerable.Range(0, state.terminalGotos.Length).Where(n => !state.terminalGotos[n].IsEmpty).ToArray());
             }
 
             // Default is to shift the symbol onto the stack

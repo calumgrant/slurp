@@ -1,14 +1,18 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Slurp
 {
     public class SyntaxError : Exception
     {
-        public SyntaxError(Token errorToken) : base($"Syntax error at {errorToken.Row}:{errorToken.Column}")
+        public SyntaxError(Token errorToken, IEnumerable<ITerminalSymbol> expected) : base($"Syntax error at {errorToken.Row}:{errorToken.Column}")
         {
             ErrorToken = errorToken;
+            ExpectedSymbols = expected;
         }
+
+        public IEnumerable<ITerminalSymbol> ExpectedSymbols { get; }
 
         public Token ErrorToken { get; }
     }
