@@ -12,7 +12,7 @@ namespace Slurp
         public Terminal Char(char ch) => ch;
         public Terminal String(string str) => str;
 
-        public ISymbol<Result> Symbol<Result>() => new Symbol<Result, Context>();
-        public ISymbol<Result> Symbol<Result>(string name) => new Symbol<Result, Context>(name);
+        public Symbol<Result, Context> Symbol<Result>() => new Symbol<Result, Context>();
+        public Symbol<Result, Context> Symbol<Result>(string name) => new Symbol<Result, Context>(name);
     }
 }

@@ -96,13 +96,13 @@ namespace Slurp
                 if (symbol.IsEof)
                     return (token, parser) =>
                     {
-                        state.items.First().Rule.function(token, parser);
+                        matchingItems.Single().Rule.function(token, parser);
                         parser.ParseSuccess = true;
                     };
 
                 state.ValidInputs[symbol.TerminalIndex] = true;
 
-                return (token, parser) => state.items.First().Rule.function(token, parser);
+                return (token, parser) => matchingItems.Single().Rule.function(token, parser);
             }
 
             if(matchingItems.Count() > 1)

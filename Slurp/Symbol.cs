@@ -99,7 +99,11 @@ namespace Slurp
 
         public void Match(Func<Result> fn) => Match((token,parser) => parser.Reduce(token, fn(), this));
 
+        public void Match(Func<Context, Result> fn) => Match((token, parser) => parser.Reduce(token, fn((Context)parser.Context), this));
+
         public void Match<T>(ISymbol<T> r, Func<T, Result> fn) => Match((token,parser) => parser.Reduce(token, fn((T)parser.Pop()), this), r);
+
+        public void Match<T>(ISymbol<T> r, Func<Context, T, Result> fn) => Match((token, parser) => parser.Reduce(token, fn((Context)parser.Context, (T)parser.Pop()), this), r);
 
         public void Match<T1, T2>(ISymbol<T1> r1, ISymbol<T2> r2, Func<T1, T2, Result> fn)
         {
@@ -111,16 +115,30 @@ namespace Slurp
             }, r1, r2);
         }
 
+        public void Match<T1, T2>(ISymbol<T1> r1, ISymbol<T2> r2, Func<Context, T1, T2, Result> fn)
+        {
+            Match((token, parser) =>
+            {
+                var b = (T2)parser.Pop();
+                var a = (T1)parser.Pop();
+                parser.Reduce(token, fn((Context)parser.Context, a, b), this);
+            }, r1, r2);
+        }
+
+
         public void Match<T1, T2, T3>(ISymbol<T1> r1, ISymbol<T2> r2, ISymbol<T3> r3, Func<T1, T2, T3, Result> fn)
         {
-            Match((token,stack) =>
+            Match((token,parser) =>
             {
-                var c = (T3)stack.Pop();
-                var b = (T2)stack.Pop();
-                var a = (T1)stack.Pop();
-                stack.Reduce(token, fn(a, b, c), this);
+                var c = (T3)parser.Pop();
+                var b = (T2)parser.Pop();
+                var a = (T1)parser.Pop();
+                parser.Reduce(token, fn(a, b, c), this);
             }, r1, r2, r3);
         }
+
+        // TODO: Add Rules with more symbols
+        // TODO: Ensure we have the context version of these.
 
         public IParser<Result, Context> MakeParser(ParserGenerator algorithm = ParserGenerator.LALR) => new Parser<Result, Context>(this, algorithm);
 

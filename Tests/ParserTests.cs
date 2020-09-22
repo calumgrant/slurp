@@ -419,6 +419,44 @@ namespace tests
 
             Assert.Throws<SyntaxError>(() => p.Parse("", 0));
         }
+
+        [Test]
+        public void Context()
+        {
+            var G = new Grammar<int>();
+
+            var E = G.Symbol<int>();
+            E.Match((Terminal)'a', (c,t) => c + 1);  // Empty rule
+
+            var p = E.MakeParser(ParserGenerator.CLR);
+            Assert.AreEqual(2, p.Parse("a", 1));
+        }
+
+        [Test]
+        public void EmptyGrammar()
+        {
+            var g = new Grammar<int>();
+            var e = g.Symbol<int>();
+            e.Match(() => 1);
+            var p = e.MakeParser(ParserGenerator.CLR);
+            p.Parse("", 0);
+        }
+
+        [Test]
+        public void FrontRecursive()
+        {
+            var g = new Grammar<int>();
+            var A = g.Symbol<int>("A");
+            var a = g.Char('a');
+
+            A.Match(A, a, (x, y) => x+1);
+            A.Match(a, x => 1);
+
+            var p = A.MakeParser(ParserGenerator.CLR);
+            Assert.AreEqual(1, p.Parse("a", 0));
+            Assert.AreEqual(2, p.Parse("aa", 0));
+            Assert.AreEqual(3, p.Parse("aaa", 0));
+        }
     }
 
     class ExampleGrammar

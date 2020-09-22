@@ -82,6 +82,8 @@ namespace Slurp
         void SyntaxError(Token token);
 
         bool ParseSuccess { get; set; }
+
+        object Context { get; }
     }
 
     public enum ParserGenerator
@@ -131,7 +133,7 @@ namespace Slurp
 
         public Result Parse(IEnumerable<char> sequence, Context context)
         {
-            var instance = new ParseInstance(initialState, terminals.ToArray());
+            var instance = new ParseInstance(initialState, context, terminals.ToArray());
 
             foreach(var tok in Tokenize(sequence))
             {
@@ -344,12 +346,15 @@ namespace Slurp
         Stack<StackItem> stack;
         ITerminalSymbol[] terminalSymbols;
 
-        internal ParseInstance(State initialState, ITerminalSymbol[] terminals)
+        internal ParseInstance(State initialState, object context, ITerminalSymbol[] terminals)
         {
+            Context = context;
             terminalSymbols = terminals;
             stack = new Stack<StackItem>();
             stack.Push(new StackItem(initialState, null));
         }
+
+        public object Context { get; }
 
         public State Current => stack.Peek().state;
 
