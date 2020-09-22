@@ -8,7 +8,7 @@ namespace Slurp
     /// A parser, that transforms a stream of characters into a resultant datatype.
     /// </summary>
     /// <typeparam name="Result">The data type to produce on a successful parse.</typeparam>
-    public interface IParser<Result>
+    public interface IParser<Result, Context>
     {
         /// <summary>
         /// Gets the underlying tokenizer used by the parser.
@@ -21,7 +21,7 @@ namespace Slurp
         /// <param name="input">The characters to parse.</param>
         /// <exception cref="SyntaxError"></exception>
         /// <returns></returns>
-        Result Parse(IEnumerable<char> input);
+        Result Parse(IEnumerable<char> input, Context context);
     }
 
     /// <summary>
@@ -118,7 +118,7 @@ namespace Slurp
         }
     }
 
-    public class Parser<Result> : IParser<Result>
+    public class Parser<Result, Context> : IParser<Result, Context>
     {
         public IEnumerable<Token> Tokenize(IEnumerable<char> sequence)
         {
@@ -129,7 +129,7 @@ namespace Slurp
             yield return new Token("<eof>", eof.TerminalIndex);
         }
 
-        public Result Parse(IEnumerable<char> sequence)
+        public Result Parse(IEnumerable<char> sequence, Context context)
         {
             var instance = new ParseInstance(initialState, terminals.ToArray());
 
@@ -150,7 +150,7 @@ namespace Slurp
         readonly List<Terminal> terminals;
         readonly List<ISymbol> symbols;
         readonly List<INonterminalSymbol> nonterminals;
-        readonly Symbol<Result> startSymbol;
+        readonly Symbol<Result, Context> startSymbol;
 
 
         // Various computations about each state
@@ -216,7 +216,7 @@ namespace Slurp
 
         public Tokenizer Tokenizer => tokenizer;
 
-        public Parser(Symbol<Result> grammar, ParserGenerator algorithm, params Terminal[] whitespace)
+        public Parser(INonterminalSymbol<Result> grammar, ParserGenerator algorithm, params Terminal[] whitespace)
         {
             strategy = algorithm switch
             {
@@ -232,7 +232,7 @@ namespace Slurp
             eof = Terminal.Eof;
 
             // Set up symbol metadata
-            startSymbol = new Symbol<Result>("start");
+            startSymbol = new Symbol<Result, Context>("start");
             startSymbol.Match(grammar, eof, (x, y) => x);
 
             symbols = startSymbol.ReachableSymbols.ToList();

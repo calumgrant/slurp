@@ -44,7 +44,7 @@ namespace Calculator
          * 
          * Finally, the MakeParser() function compiles the grammar into a parser.
          */
-        internal static IParser<double> CreateParser()
+        internal static IParser<double,object> CreateParser()
         {
             // The "terminal symbols" of the grammar
 
@@ -70,12 +70,13 @@ namespace Calculator
             // The "non-terminal symbols" of the grammar.
             // In the calculator grammar, all non-terminal symbols generate a
             // "double" when the are parsed.
-            var Expression = new Symbol<double>();
-            var PrimaryExpression = new Symbol<double>();
-            var AdditiveExpression = new Symbol<double>();
-            var MultiplicativeExpression = new Symbol<double>();
-            var UnaryExpression = new Symbol<double>();
-            var PostfixExpression = new Symbol<double>();
+
+            var Expression = new Symbol<double, object>();
+            var PrimaryExpression = new Symbol<double,object>();
+            var AdditiveExpression = new Symbol<double,object>();
+            var MultiplicativeExpression = new Symbol<double,object>();
+            var UnaryExpression = new Symbol<double,object>();
+            var PostfixExpression = new Symbol<double,object>();
 
             // Define the rules of the grammar
 
@@ -113,6 +114,7 @@ namespace Calculator
             UnaryExpression.Match((Terminal)"tan", UnaryExpression, (_, y) => Math.Tan(y));
             UnaryExpression.Match((Terminal)"exp", UnaryExpression, (_, y) => Math.Exp(y));
             UnaryExpression.Match((Terminal)"floor", UnaryExpression, (_, y) => Math.Floor(y));
+            UnaryExpression.Match((Terminal)"sqrt", UnaryExpression, (_, y) => Math.Sqrt(y));
 
             MultiplicativeExpression.Match(UnaryExpression);
             MultiplicativeExpression.Match(MultiplicativeExpression, (Terminal)'*', UnaryExpression, (x, _, z) => x * z);
@@ -146,7 +148,7 @@ namespace Calculator
                 {
                     Console.Write("> ");
                     line = Console.ReadLine();
-                    Console.WriteLine(parser.Parse(line));
+                    Console.WriteLine(parser.Parse(line, 0));
                 }
                 catch (SyntaxError e)
                 {

@@ -49,6 +49,10 @@ namespace Slurp
 
     public interface INonterminalSymbol<T> : INonterminalSymbol, ISymbol<T>
     {
+
+        // This interface feels wrong
+        IEnumerable<Terminal> ReachableTerminals { get; }
+        Tokenizer MakeTokenizer(params Terminal[] whitespace);
     }
 
     public interface ISymbol<Result> : ISymbol
@@ -65,7 +69,7 @@ namespace Slurp
     /// Symbols specify their "result type"
     /// </summary>
     /// <typeparam name="Result">When a parse is successful, this is the type of the result.</typeparam>
-    public class Symbol<Result> : INonterminalSymbol<Result>
+    public class Symbol<Result, Context> : INonterminalSymbol<Result>
     {
         // The name of the symbol.
         // This isn't needed to compile the grammar, but can come in useful
@@ -91,7 +95,7 @@ namespace Slurp
 
         private void Match(Reduce fn, params ISymbol[] symbols) { rules.Add(new ProductionRule(this, symbols, fn)); }
 
-        public void Match(Symbol<Result> r) => Match(r, x=>x);
+        public void Match(ISymbol<Result> r) => Match(r, x=>x);
 
         public void Match(Func<Result> fn) => Match((token,parser) => parser.Reduce(token, fn(), this));
 
@@ -118,7 +122,7 @@ namespace Slurp
             }, r1, r2, r3);
         }
 
-        public IParser<Result> MakeParser(ParserGenerator algorithm = ParserGenerator.LALR) => new Parser<Result>(this, algorithm);
+        public IParser<Result, Context> MakeParser(ParserGenerator algorithm = ParserGenerator.LALR) => new Parser<Result, Context>(this, algorithm);
 
         public IEnumerable<ProductionRule> Rules => rules;
 

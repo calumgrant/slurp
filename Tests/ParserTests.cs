@@ -162,7 +162,7 @@ namespace tests
         {
             Terminal a = 'a';
             Terminal b = 'b';
-            Symbol<string> ab = new Symbol<string>();
+            Symbol<string,object> ab = new Symbol<string,object>();
             ab.Match(a, b, (Token a, Token b) => a.Text + b.Text);
 
             var tokenizer = ab.MakeTokenizer();
@@ -173,7 +173,7 @@ namespace tests
         {
             Terminal a = 'a';
 
-            Symbol<string> Id = new Symbol<string>();
+            Symbol<string,object> Id = new Symbol<string,object>();
             Id.Match(a, a, a, (x, y, z) => x.Text + y.Text + z.Text);
 
 
@@ -183,8 +183,8 @@ namespace tests
             Terminal plus = '+';
             Terminal open = '(';
             Terminal close = ')';
-            Symbol<string> E = new Symbol<string>("E");
-            Symbol<string> T = new Symbol<string>("T");
+            Symbol<string,object> E = new Symbol<string,object>("E");
+            Symbol<string,object> T = new Symbol<string,object>("T");
 
             E.Match(T);
             E.Match(E, plus, T, (e, _, t) => e + t);
@@ -195,21 +195,21 @@ namespace tests
 
             // Use the grammar for parsing
 
-            var s = parser.Parse("i");
+            var s = parser.Parse("i", new object());
             Assert.AreEqual("i", s);
-            s = parser.Parse("i+i");
+            s = parser.Parse("i+i", new object());
             Assert.AreEqual("ii", s);
-            s = parser.Parse("i+(i)");
+            s = parser.Parse("i+(i)", new object());
             Assert.AreEqual("ii", s);
 
-            Assert.Throws<SyntaxError>(() => parser.Parse("i)"));
+            Assert.Throws<SyntaxError>(() => parser.Parse("i)", new object()));
         }
 
         [Test]
         public void TestLR0ReduceReduceConflict()
         {
             Terminal a = 'a';
-            var P = new Symbol<int>();
+            var P = new Symbol<int,object>();
 
             P.Match(a, x => 1);
             P.Match(a, x => 2);
@@ -225,7 +225,7 @@ namespace tests
             // "Conflicts in the contructed tables"
 
             Terminal one = '1';
-            Symbol<int> E = new Symbol<int>("E");
+            Symbol<int,object> E = new Symbol<int,object>("E");
 
             E.Match(one, _ => 1);
             E.Match(one, E, (x, y) => 1 + y);
@@ -235,9 +235,9 @@ namespace tests
             var p0 = E.MakeParser(ParserGenerator.SLR);
 
 
-            Symbol<int> E2 = new Symbol<int>("E2");
-            var A = new Symbol<int>("A");
-            var B = new Symbol<int>("B");
+            Symbol<int,object> E2 = new Symbol<int,object>("E2");
+            var A = new Symbol<int,object>("A");
+            var B = new Symbol<int,object>("B");
 
             Terminal two = '2';
             E2.Match(A, one, (a, b) => a + 1);
@@ -258,8 +258,8 @@ namespace tests
             Terminal open = '(';
             Terminal close = ')';
 
-            var Expr = new Symbol<int>("Expr");
-            var Factor = new Symbol<int>("Factor");
+            var Expr = new Symbol<int,object>("Expr");
+            var Factor = new Symbol<int,object>("Factor");
 
             Expr.Match(Factor);
             Expr.Match(open, Expr, close, (_t1, n, _t) => n);
@@ -288,8 +288,8 @@ namespace tests
             Terminal _0 = '0';
             Terminal _1 = '1';
 
-            var E = new Symbol<int>("E");
-            var B = new Symbol<int>("B");
+            var E = new Symbol<int,object>("E");
+            var B = new Symbol<int,object>("B");
 
             E.Match(E, times, B, (x,t,b) => x * b);
             E.Match(E, plus, B, (x,t,b) => x + b);
@@ -311,7 +311,7 @@ namespace tests
         {
             Terminal _1 = '1';
             
-            var G = new Symbol<int>("G");
+            var G = new Symbol<int,object>("G");
             G.Match(_1, (token) => 1);
             G.Match(_1, (token) => 2);
 
@@ -321,7 +321,7 @@ namespace tests
         [Test]
         public void DegenerateRule()
         {
-            var E = new Symbol<int>("E");
+            var E = new Symbol<int,object>("E");
             E.Match(E);  // Invalid
 
             var p = E.MakeParser(ParserGenerator.SLR);
@@ -335,9 +335,9 @@ namespace tests
             // https://en.wikipedia.org/wiki/LALR_parser
 
             // Non-terminal symbols in the grammar:
-            var S = new Symbol<int>();
-            var E = new Symbol<int>();
-            var F = new Symbol<int>();
+            var S = new Symbol<int,object>();
+            var E = new Symbol<int,object>();
+            var F = new Symbol<int,object>();
 
             // Terminal synbols in the grammar:
             Terminal a = 'a';
@@ -401,8 +401,8 @@ namespace tests
             Terminal c = 'c';
             Terminal d = 'd';
 
-            Symbol<int> S = new Symbol<int>("S");
-            Symbol<int> C = new Symbol<int>("C");
+            var S = new Symbol<int,object>("S");
+            var C = new Symbol<int,object>("C");
 
             S.Match(C, C, (a, b) => a + b);
             C.Match(c, C, (x, y) => 2 + y);
@@ -410,14 +410,14 @@ namespace tests
 
             var p = S.MakeParser(ParserGenerator.CLR);
 
-            Assert.AreEqual(2, p.Parse("dd"));
-            Assert.AreEqual(6, p.Parse("cdcd"));
-            Assert.AreEqual(14, p.Parse("ccccccdd"));
-            Assert.AreEqual(8, p.Parse("dcccd"));
+            Assert.AreEqual(2, p.Parse("dd", 0));
+            Assert.AreEqual(6, p.Parse("cdcd", 0));
+            Assert.AreEqual(14, p.Parse("ccccccdd", 0));
+            Assert.AreEqual(8, p.Parse("dcccd", 0));
 
-            Assert.Throws<SyntaxError>(() => p.Parse("cc"));
+            Assert.Throws<SyntaxError>(() => p.Parse("cc", 0));
 
-            Assert.Throws<SyntaxError>(() => p.Parse(""));
+            Assert.Throws<SyntaxError>(() => p.Parse("", 0));
         }
     }
 
@@ -430,8 +430,8 @@ namespace tests
             var comma = Terminal.Char(',');
             var whitespace = Terminal.OneOf(' ', '\t').Repeat(1..);
 
-            var integer = new Symbol<int>();
-            var sequence = new Symbol<List<int>>();
+            var integer = new Symbol<int,object>();
+            var sequence = new Symbol<List<int>,object>();
 
             integer.Match(Terminal.Digit.Repeat(1..), s => int.Parse(s.Text));
 
@@ -442,12 +442,12 @@ namespace tests
 
             // Example 2: An arithmetic expression parser
 
-            var expression = new Symbol<int>();
-            var additive_expression = new Symbol<int>();
-            var primary_expession = new Symbol<int>();
-            var multiplicative_expression = new Symbol<int>();
-            var primary_expression = new Symbol<int>();
-            var unary_expression = new Symbol<int>();
+            var expression = new Symbol<int,object>();
+            var additive_expression = new Symbol<int,object>();
+            var primary_expession = new Symbol<int,object>();
+            var multiplicative_expression = new Symbol<int,object>();
+            var primary_expression = new Symbol<int,object>();
+            var unary_expression = new Symbol<int,object>();
 
             expression.Match(primary_expression);
 
@@ -467,7 +467,7 @@ namespace tests
             unary_expression.Match(Terminal.Char('-'), unary_expression, (_, e) => -e);
 
             var expression_parser = expression.MakeParser(ParserGenerator.SLR);
-            var six = expression_parser.Parse("1+2+3");
+            var six = expression_parser.Parse("1+2+3",0);
 
             // Example 3: JSON parser
             Terminal regularWs = Terminal.OneOf(' ', '\t').Repeat(1..);
