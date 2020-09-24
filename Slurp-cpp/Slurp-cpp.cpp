@@ -6,26 +6,11 @@
 #include <cassert>
 
 #include "Stack.hpp"
+#include "Rules.hpp"
+#include "typeset.h"
 
 namespace slurp
 {
-
-
-	template<int Kind, typename Rule>
-	class Token
-	{
-
-	};
-
-	template<int Kind, typename ... Symbols>
-	class Rule
-	{
-
-	};
-
-	template<typename ... Rs>
-	class Rules {
-	};
 
 	class Parse
 	{
@@ -35,12 +20,10 @@ namespace slurp
 		const Node& root();
 	};
 
-	template<int ch> class Ch
-	{ };
-
-	template<int C1, int C2> class Range;
-
-	template<typename ... S > class Seq;  // An unnamed rule: used 
+	template<typename... Tokens>
+	class Tokenizer
+	{
+	};	
 }
 
 namespace Example
@@ -101,6 +84,8 @@ namespace Example
 
 	void testIt()
 	{
+		// typedef Tokenizer < typeset<Token<1, Ch<'x'>>> tok2;
+
 	}
 }
 

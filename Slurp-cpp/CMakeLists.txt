@@ -4,6 +4,6 @@
 cmake_minimum_required (VERSION 3.8)
 
 # Add source to this project's executable.
-add_executable (Slurp-cpp "Slurp-cpp.cpp" "Slurp-cpp.h" "type_set.h" "Node.h" "Stack.hpp" "Stack.cpp")
+add_executable (Slurp-cpp "Slurp-cpp.cpp" "Slurp-cpp.h" "typeset.h" "Node.h" "Stack.hpp" "Stack.cpp" "Rules.hpp" "RulesTests.cpp")
 
 # TODO: Add tests and install targets if needed.
