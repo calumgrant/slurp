@@ -5,9 +5,7 @@
 #include <vector>
 #include <cassert>
 
-#include "Stack.hpp"
-#include "Rules.hpp"
-#include "typeset.h"
+#include "slurp.hpp"
 
 namespace slurp
 {

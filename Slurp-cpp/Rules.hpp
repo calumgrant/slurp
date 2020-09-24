@@ -15,34 +15,30 @@
 
 namespace slurp
 {
-	template<int ch> class Ch
-	{ };
+	// Matches a single character.
+	template<int ch> class Ch;
 
+	// Matches a single character in a range.
 	template<int C1, int C2> class Range;
 
-	template<typename ... S > class Seq;  // An unnamed rule: used 
+	// Matches a sequence.
+	template<typename ... S > class Seq;  // An unnamed rule: used to build tokens
 
-	template<int Kind, typename Rule>
-	class Token
-	{
+	// A Token symbol - a terminal symbol.
+	// When this is matched, it creates a token node in the parse tree.
+	template<int Kind, typename Rule> class Token;
 
-	};
+	// A rule symbol, consistint of a sequence of other symbols.
+	// The rule may be empty.
+	// When this is matched, it creates a node with the given number of children in the parse tree. 
+	template<int Kind, typename ... Symbols> class Rule;
 
-	template<int Kind, typename ... Symbols>
-	class Rule
-	{
+	// A list of rules, used to define either
+	// a token or a symbol.
+	template<typename ... Rs> class Rules;
 
-	};
-
-	template<typename ... Rs>
-	class Rules {
-	};
-
-	template<typename ... Rs>
-	class Seq
-	{
-
-	};
+	// A sequence of rules, used to define a token.
+	template<typename ... Rs> class Seq;
 
 	template<typename T>
 	struct is_token
@@ -56,105 +52,11 @@ namespace slurp
 		static const bool value = true;
 	};
 
-	template<typename T>
-	struct get_rules
-	{
-		typedef typename T::rule type;
-	};
-
-	template<typename S>
-	struct maybe_empty
-	{
-		static const bool value = maybe_empty<typename S::rules>::value value;
-	};
-
-	template<typename T>
-	struct single_char_token_part
-	{
-		static const bool value = false;
-	};
-
-	template<typename T>
-	struct rule_traits : public rule_traits<typename T::rules>
-	{
-		typedef typename T::rules rules;
-	};
-
-	template<int N>
-	struct rule_traits<Ch<N>>
-	{
-		static const bool is_token = true;
-		static const bool single_character_token = true;
-	};
-
 	// 
 	// Compute first and follows
 
 
-	template<typename T> struct is_empty
-	{
-		static const bool value = is_empty<typename T::rules>::value;
-	};
 
-	template<int N, typename T> struct is_empty<Token<N, T>>
-	{
-		static const bool value = false;
-	};
-
-	template<int N> struct is_empty<Ch<N>>
-	{
-		static const bool value = false;
-	};
-
-	template<int A, int B> struct is_empty<Range<A,B>>
-	{
-		static const bool value = false;
-	};
-
-	template<typename A, typename... B>
-	struct is_empty<Rules<A, B...>>
-	{
-		static const bool value = is_empty<A>::value || is_empty<Rules<B...>>::value;
-	};
-
-	template<>
-	struct is_empty<Rules<>>
-	{
-		static const bool value = false;
-	};
-
-	template<int N>
-	struct is_empty<Rule<N>>
-	{
-		static const bool value = true;
-	};
-
-	template<int N, typename T, typename...Ts>
-	struct is_empty < Rule<N, T, Ts...>>
-	{
-		static const bool value = is_empty<T>::value && is_empty<Rule<N, Ts...>>::value;
-	};
-
-	template<typename T>
-	struct first
-	{
-		typedef typename first<typename T::rules>::type type;
-	};
-
-	template<int C>
-	struct first<Ch<C>>
-	{
-		typedef typeset<Ch<C>> type;
-	};
-
-	template<int N, typename T>
-	struct first<Token<N,T>>
-	{
-		typedef typeset<Token<N, T>> type;
-	};
-
-	//template<int N, typename A>
-	//struct first<
 
 
 }
