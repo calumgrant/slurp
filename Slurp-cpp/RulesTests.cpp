@@ -118,10 +118,10 @@ namespace ExprTests
 	// Check the first
 	// Ensure that first/is-empty work forrecursive predicates.
 	static_assert(!is_empty<Expr>::value, "");
-	// typedef first<Expr>::type e_first;
+	typedef first<Expr>::type e_first;
 
 	// Currently fails because first doesn't handle recursive rules (bug)
-	//static_assert(ts_size<e_first>::value == 2);
+	static_assert(ts_size<e_first>::value == 2, "");
 }
 
 namespace RecursiveRules
