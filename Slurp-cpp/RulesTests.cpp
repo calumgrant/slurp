@@ -32,28 +32,48 @@ static_assert(!is_empty<Rules<Rule<12, tok1>>>::value, "");
 
 struct Epsilon1
 {
-	typedef Rule<11> rules;
+	typedef Rule<11> rule;
 };
 
 struct Epsilon2
 {
-	typedef Rules<Epsilon1> rules;
+	typedef Rules<Epsilon1> rule;
 };
 
 struct Epsilon3
 {
-	typedef Rules<tok1, Epsilon1> rules;
+	typedef Rules<tok1, Epsilon1> rule;
 };
 
 struct Epsilon4
 {
-	typedef Rule<1, Epsilon3, Epsilon2, Epsilon1> rules;
+	typedef Rule<1, Epsilon1> rule;
+};
+
+
+struct Epsilon5
+{
+	typedef Rule<1, Epsilon1, Epsilon2/*, Epsilon1*/> rule;
 };
 
 static_assert(is_empty<Epsilon1>::value, "");
 static_assert(is_empty<Epsilon2>::value, "");
 static_assert(is_empty<Epsilon3>::value, "");
 static_assert(is_empty<Epsilon4>::value, "");
+
+static_assert(is_empty<Rule<1>>::value, "Symbol should be is_empty");
+static_assert(is_empty<Rule<1, Rule<2>>>::value, "Symbol should be is_empty");
+static_assert(is_empty<Rule<1, Rule<2>, Rule<3>>>::value, "Symbol should be is_empty");
+static_assert(is_empty<Rule<1, Rule<1>, Rule<1>>>::value, "Symbol should be is_empty");
+static_assert(is_empty<Rule<1, Epsilon1>>::value, "Symbol should be is_empty");
+static_assert(is_empty<Rule<1, Epsilon1, Epsilon1>>::value, "Symbol should be is_empty");
+
+// static_assert(is_empty<Rule<1, Rule<2>, Rule<3>>::value, "Symbol should be is_empty");
+
+
+static_assert(is_empty<Rule<1, Epsilon1, Epsilon2>>::value, "Symbol should be is_empty");
+
+static_assert(is_empty<Epsilon5>::value, "Symbol should be is_empty");
 static_assert(!is_empty<Rule<2, Epsilon2, tok1>>::value, "");
 static_assert(!is_empty<Rule<2, tok1,Epsilon2>>::value, "");
 
@@ -96,4 +116,11 @@ namespace
 	static_assert(ts_size<parser1::symbols>::value == 6, "");
 	static_assert(ts_size<parser1::terminals>::value == 4, "");
 	static_assert(ts_size<parser1::nonterminals>::value == 2, "Unexpected number of nonterminals");
+
+	// Check the first
+	// Ensure that first/is-empty work forrecursive predicates.
+	static_assert(!is_empty<Expr>::value, "");
+	//typedef first<Expr>::type e_first;
+
+	//static_assert(ts_size<e_first>::value == 2);
 }
