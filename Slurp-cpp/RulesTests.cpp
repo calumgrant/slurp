@@ -67,10 +67,7 @@ static_assert(is_empty<Rule<1, Rule<2>, Rule<3>>>::value, "Symbol should be is_e
 static_assert(is_empty<Rule<1, Rule<1>, Rule<1>>>::value, "Symbol should be is_empty");
 static_assert(is_empty<Rule<1, Epsilon1>>::value, "Symbol should be is_empty");
 static_assert(is_empty<Rule<1, Epsilon1, Epsilon1>>::value, "Symbol should be is_empty");
-
-// static_assert(is_empty<Rule<1, Rule<2>, Rule<3>>::value, "Symbol should be is_empty");
-
-
+static_assert(is_empty<Rule<1, Rule<2>, Rule<3>>>::value, "Symbol should be is_empty");
 static_assert(is_empty<Rule<1, Epsilon1, Epsilon2>>::value, "Symbol should be is_empty");
 
 static_assert(is_empty<Epsilon5>::value, "Symbol should be is_empty");
@@ -84,12 +81,13 @@ typedef typeset<tok1> first1;
 typedef first<tok1>::type first1;
 typedef first<Rules<tok1, tok1>>::type first1;
 
-typedef Token<'(', Ch<'('>> tok_open;
-typedef Token<')', Ch<')'>> tok_close;
-typedef Token<123, Range<'0','9'>> tok_int;
 
-namespace
+namespace ExprTests
 {
+	typedef Token<'(', Ch<'('>> tok_open;
+	typedef Token<')', Ch<')'>> tok_close;
+	typedef Token<123, Range<'0', '9'>> tok_int;
+
 	struct Expr
 	{
 		typedef Rules <
@@ -120,7 +118,36 @@ namespace
 	// Check the first
 	// Ensure that first/is-empty work forrecursive predicates.
 	static_assert(!is_empty<Expr>::value, "");
-	//typedef first<Expr>::type e_first;
+	// typedef first<Expr>::type e_first;
 
+	// Currently fails because first doesn't handle recursive rules (bug)
 	//static_assert(ts_size<e_first>::value == 2);
+}
+
+namespace RecursiveRules
+{
+	enum tokens { a, b };
+
+	typedef Token<a, Ch<'a'>> tok_a;
+
+	typedef Rules<
+		Rule<b>,
+		tok_a
+		> MaybeA;
+
+	struct Expr
+	{
+		typedef Rules<
+			Rule<1, MaybeA, Expr>,
+			Rule<2, MaybeA>
+			> rule;
+	};
+
+	static_assert(is_empty<MaybeA>::value, "");
+	static_assert(ts_contains<tok_a, first<MaybeA>::type>::value, "");
+
+	static_assert(is_empty<Expr>::value, "");
+
+	// Fix recursive first()
+	static_assert(ts_contains<tok_a, first<Expr>::type>::value, "");
 }
