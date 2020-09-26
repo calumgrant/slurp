@@ -43,6 +43,12 @@ namespace slurp
 		typedef Visited type;
 	};
 
+	template<int K, typename T, typename Visited>
+	struct reachable_symbols2<Token<K, T>, Visited>
+	{
+		typedef typeset<Token<K, T>> type;
+	};
+
 	template<typename H, typename Visited, typename...Ts>
 	struct reachable_symbols2<Rules<H, Ts...>, Visited>
 	{
@@ -86,6 +92,9 @@ namespace slurp
 	};
 
 
+	// How to expand a closure
+
+
 	typedef Token<-1, void> eof;
 
 	template<typename Symbol>
@@ -99,5 +108,7 @@ namespace slurp
 		using symbols = typename reachable_symbols<start>::type;
 		using terminals = typename ts_where<symbols, is_terminal>::type;
 		using nonterminals = typename ts_except<symbols, is_terminal>::type;
+
+		typedef item<start, 0, eof> start_item;
 	};
 }

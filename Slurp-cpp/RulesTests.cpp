@@ -129,6 +129,7 @@ namespace RecursiveRules
 	enum tokens { a, b };
 
 	typedef Token<a, Ch<'a'>> tok_a;
+	typedef Token<b, Ch<'b'>> tok_b;
 
 	typedef Rules<
 		Rule<b>,
@@ -150,4 +151,52 @@ namespace RecursiveRules
 
 	// Fix recursive first()
 	static_assert(ts_contains<tok_a, first<Expr>::type>::value, "");
+
+	static_assert(ts_contains<tok_a, first<tok_a>::type > ::value, "");
+
+	struct A
+	{
+		typedef Rules<
+			Rule<1, MaybeA, A>,
+			Rule<2, tok_a, tok_a, A>
+		> rule;
+	};
+
+	struct B
+	{
+		typedef Rules<
+			Rule<3, tok_b, A, B>
+		> rule;
+	};
+
+	static_assert(ts_contains<tok_b, first<B>::type>::value, "");
+	static_assert(ts_contains<tok_a, first<A>::type>::value, "");
+
+	struct C
+	{
+		typedef Rules<
+			Rule<3, MaybeA, tok_b, B>
+		> rule;
+	};
+	static_assert(ts_contains<tok_a, first<C>::type>::value, "");
+	static_assert(ts_contains<tok_b, first<C>::type>::value, "");
+
+	typedef item<Rule<100, C>, 0, tok_b> item1;
+
+	typedef follows<item1>::type follow1;
+	static_assert(ts_contains<tok_a, follow1>::value, "");
+	static_assert(ts_contains<tok_b, follow1>::value, "");
+
+	// typedef 
+
+	// Expansion
+
+	typedef expand<item1>::type t1;
+
+	// Let's print this then.
+}
+
+namespace ExpandTests
+{
+
 }

@@ -2,10 +2,9 @@
 //
 
 #include "Slurp-cpp.h"
-#include <vector>
-#include <cassert>
 
 #include "slurp.hpp"
+#include "prettyprint.hpp"
 
 namespace slurp
 {
@@ -131,9 +130,42 @@ void TestStack()
 	}
 }
 
+struct Statement
+{
+};
+
+void PrintStuff()
+{
+	using namespace slurp;
+	enum { open, close, i, bracket };
+
+	typedef Token<open, Ch<'('>> tok_open;
+	typedef Token<close, Ch<')'>> tok_close;
+	typedef Token<i, Range<'0', '9'>> tok_int;
+
+	struct Expr
+	{
+		typedef Rules<
+			Rule<bracket, tok_open, Expr, tok_close>,
+			tok_int
+		> rule;
+	};
+
+	std::cout <<
+		print<typeset<>> << std::endl <<
+		print<Token<123, Ch<'X'>>> << std::endl <<
+		print<Expr> << std::endl <<
+		print<Statement> << std::endl <<
+		print<Rule<123, Expr, Statement>> << std::endl;
+
+	std::cout << "Rules:\n" << print<Expr::rule> << std::endl;
+	std::cout << "Reachable: " << print<reachable_symbols<Expr>::type> << std::endl;
+}
+
 int main()
 {
 	TestStack();
+	PrintStuff();
 	std::cout << "Hello CMake." << std::endl;
 	return 0;
 }
