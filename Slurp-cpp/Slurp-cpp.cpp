@@ -162,10 +162,122 @@ void PrintStuff()
 	std::cout << "Reachable: " << print<reachable_symbols<Expr>::type> << std::endl;
 }
 
+#include <stack>
+
+namespace ManualTableExample
+{
+	// An complete example of a hand written LR parser.
+	enum Actions { Error, Shift, Reduce, Accept, Goto };
+
+	// Hard coded symbols. a,b,eof are terminals, and E is the non-terminal.
+	enum Symbol { a, b, eof, E, NUMBER_OF_SYMBOLS };
+
+	// An entry in the parser table.
+	// For expedience, the non-terminal gotos are also encoded in the same table.
+	struct Action {
+		Actions action;
+		union { int state, rule; };
+	};
+
+	// A row in the parser table.
+	struct State
+	{
+		Action actions[NUMBER_OF_SYMBOLS];
+	};
+
+	// Information about rules, needed when the parser reduces.
+	struct Rule
+	{
+		int length;
+		Symbol symbol;
+	};
+
+	// The core parser algorithm of an LR parser
+	// input: a sequence of tokens, that must be terminated by the eof symbol
+	// states: the computed actions and goto table.
+	// rules: The length and resultant symbol of each rule.
+	// Returns true if parsing was successful.
+	bool parse(const Symbol input[], const State states[], const Rule rules[])
+	{
+		// In this example the stack only stores the state.
+		// Real LR parsers would also store an additional value in the stack.
+		std::stack<int> stack;
+		int state = 0;
+		for (; ; ++input)
+		{
+			// Reduce the stack 0 or more times for each input
+			while (states[state].actions[*input].action == Reduce)
+			{
+				// Look up the rule that is being reduced.
+				const Rule &rule = rules[states[state].actions[*input].rule];
+				// Pop the correct number of symbols from the stack.
+				// Real LR parsers would also report the position of the match
+				// and compute the parse node at this point.
+				for (int s = 1; s < rule.length; ++s)
+					stack.pop();
+				state = states[stack.top()].actions[rule.symbol].state;
+			}
+			switch (states[state].actions[*input].action)
+			{
+			case Error:
+				// Syntax error
+				return false;
+			case Shift:
+				stack.push(state);
+				state = states[state].actions[*input].state;
+				break;
+			case Accept:
+				return true;
+			}
+		}
+		return false;  // Dead code
+	}
+
+	void examplelr()
+	{
+		// Manually computer parser table for the grammar
+		// E -> a b
+		// E -> a E b
+
+		Rule rules[] = { Rule { 2, E }, Rule { 3, E } };
+
+		Action error{ Error, 0 };
+
+		// The manually crafted parser table.
+		State states[10] =
+		{
+			{ Action { Shift, 1 }, error, error, Action { Goto, 2} },
+			{ Action { Shift, 3}, Action{Shift,5},error, Action{Goto,6}},
+			{ error, error, Action{Accept}, error },
+			{ Action {Shift, 3}, Action {Shift, 4}, error, Action{Goto, 7}},
+			{ error, Action{Reduce, 0}, error, error },
+			{ error, error, Action { Reduce, 0 }, error },
+			{ error, Action { Shift, 8 }, error, error },
+			{ error, Action { Shift, 9 }, error, error },
+			{ error, error, Action { Reduce, 1 }, error },
+			{ error, Action { Reduce, 1 }, error, error }
+		};
+
+		// Some sample programs
+		Symbol program1[] = { eof };
+		Symbol program2[] = { a, b, eof };
+		Symbol program3[] = { a, a, a, b, b, b, eof };
+		Symbol program4[] = { a, a, b, eof };
+		Symbol program5[] = { a, a, b, b, b, eof };
+		Symbol* programs[] = { program1, program2, program3, program4,program5 };
+
+		for (int p = 0; p < 5; ++p)
+		{
+			std::cout << "Program " << p << " parse result = " << parse(programs[p], states, rules) << std::endl;
+		}
+	}
+}
+
 int main()
 {
 	TestStack();
 	PrintStuff();
+	ManualTableExample::examplelr();
 	std::cout << "Hello CMake." << std::endl;
 	return 0;
 }
