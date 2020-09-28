@@ -46,7 +46,7 @@ namespace slurp
 	template<int K, typename T, typename Visited>
 	struct reachable_symbols2<Token<K, T>, Visited>
 	{
-		typedef typeset<Token<K, T>> type;
+		typedef typename ts_insert<Token<K, T>, Visited>::type type;
 	};
 
 	template<typename H, typename Visited, typename...Ts>

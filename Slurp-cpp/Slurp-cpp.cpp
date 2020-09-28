@@ -151,6 +151,15 @@ void PrintStuff()
 		> rule;
 	};
 
+	struct Expr2
+	{
+		typedef Rules<
+			Rule<bracket, tok_open, Expr2, tok_close>,
+			Rule<123, tok_int>
+		> rule;
+	};
+
+
 	std::cout <<
 		print<typeset<>> << std::endl <<
 		print<Token<123, Ch<'X'>>> << std::endl <<
@@ -159,7 +168,15 @@ void PrintStuff()
 		print<Rule<123, Expr, Statement>> << std::endl;
 
 	std::cout << "Rules:\n" << print<Expr::rule> << std::endl;
+	
+	// Bug
 	std::cout << "Reachable: " << print<reachable_symbols<Expr>::type> << std::endl;
+
+	std::cout << "Rules:\n" << print<Expr2::rule> << std::endl;
+	std::cout << "Reachable: " << print<reachable_symbols<Expr2>::type> << std::endl;
+	typedef parser_construction<Expr> c1;
+	std::cout << print<c1::terminals> << std::endl;
+	std::cout << print<c1::nonterminals> << std::endl;
 }
 
 #include <stack>

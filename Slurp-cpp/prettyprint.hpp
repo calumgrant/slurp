@@ -57,11 +57,11 @@ namespace slurp
 		};
 
 		template<typename T, typename... Ts>
-		struct pp_ts<typeset<T, Ts...>>
+		struct pp_ts<T, Ts...>
 		{
 			static void output(std::ostream& os)
 			{
-				os << ", " << print<T >> ;
+				os << ", " << print<T>;
 				pp_ts<Ts...>::output(os);
 			}
 		};
