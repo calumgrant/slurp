@@ -220,37 +220,35 @@ namespace ManualTableExample
 			switch (states[state].actions[*input].action)
 			{
 			case Error:
-				// Syntax error
-				return false;
+				return false;  // Syntax error
 			case Shift:
 				stack.push(state);
 				state = states[state].actions[*input].state;
 				break;
 			case Accept:
-				return true;
+				return true;  // Parse success
 			}
 		}
-		return false;  // Dead code
 	}
 
 	void examplelr()
 	{
-		// Manually computer parser table for the grammar
+		// Manually computed parser table for the grammar
 		// E -> a b
 		// E -> a E b
 
 		Rule rules[] = { Rule { 2, E }, Rule { 3, E } };
 
-		Action error{ Error, 0 };
+		Action error { Error, 0 };
 
 		// The manually crafted parser table.
 		State states[10] =
 		{
 			{ Action { Shift, 1 }, error, error, Action { Goto, 2} },
-			{ Action { Shift, 3}, Action{Shift,5},error, Action{Goto,6}},
+			{ Action { Shift, 3}, Action {Shift,5},error, Action { Goto,6}},
 			{ error, error, Action{Accept}, error },
-			{ Action {Shift, 3}, Action {Shift, 4}, error, Action{Goto, 7}},
-			{ error, Action{Reduce, 0}, error, error },
+			{ Action { Shift, 3}, Action { Shift, 4}, error, Action { Goto, 7}},
+			{ error, Action{ Reduce, 0 }, error, error },
 			{ error, error, Action { Reduce, 0 }, error },
 			{ error, Action { Shift, 8 }, error, error },
 			{ error, Action { Shift, 9 }, error, error },
@@ -264,9 +262,10 @@ namespace ManualTableExample
 		Symbol program3[] = { a, a, a, b, b, b, eof };
 		Symbol program4[] = { a, a, b, eof };
 		Symbol program5[] = { a, a, b, b, b, eof };
-		Symbol* programs[] = { program1, program2, program3, program4,program5 };
+		Symbol program6[] = { a, a, b, b, eof };
+		Symbol* programs[] = { program1, program2, program3, program4, program5, program6 };
 
-		for (int p = 0; p < 5; ++p)
+		for (int p = 0; p < 6; ++p)
 		{
 			std::cout << "Program " << p << " parse result = " << parse(programs[p], states, rules) << std::endl;
 		}
