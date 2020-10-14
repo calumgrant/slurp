@@ -214,7 +214,7 @@ namespace ManualTableExample
 	// states: the computed actions and goto table.
 	// rules: The length and resultant symbol of each rule.
 	// Returns true if parsing was successful.
-	bool parse(const Symbol input[], const State states[], const Rule rules[])
+	bool parse0(const Symbol input[], const State states[], const Rule rules[])
 	{
 		// In this example the stack only stores the state.
 		// Real LR parsers would also store an additional value in the stack.
@@ -247,6 +247,33 @@ namespace ManualTableExample
 			}
 		}
 	}
+
+	bool parse(const Symbol input[], const State states[], const Rule rules[])
+	{
+		std::stack<int> stack;
+		stack.push(0);
+		for (;; ++input)
+		{
+			while (states[stack.top()].actions[*input].action == Reduce)
+			{
+				const Rule& rule = rules[states[stack.top()].actions[*input].rule];
+				for (int s = 0; s < rule.length; ++s)
+					stack.pop();
+				stack.push(states[stack.top()].actions[rule.symbol].state);
+			}
+			switch (states[stack.top()].actions[*input].action)
+			{
+			case Error:
+				return false;
+			case Shift:
+				stack.push(states[stack.top()].actions[*input].state);
+				break;
+			case Accept:
+				return true;
+			}
+		}
+	}
+
 
 	void examplelr()
 	{
@@ -289,11 +316,36 @@ namespace ManualTableExample
 	}
 }
 
+namespace RD
+{
+	using namespace slurp;
+
+	typedef Token<'d', Ch<'d'>> Digit;
+
+	struct Integer
+	{
+		typedef Rules<
+			Digit,
+			Rule<'i', Digit, Integer>
+		> rule;
+	};
+
+	void TestRecursiveDescent()
+	{
+		null_tokenizer tok;
+
+		char input[] = "ddd";
+		auto p = recursive_descent2<Integer>(tok, input, input + 3);
+		p.DumpTree();
+	}
+}
+
 int main()
 {
+	ManualTableExample::examplelr();
 	TestStack();
 	PrintStuff();
-	ManualTableExample::examplelr();
+	RD::TestRecursiveDescent();
 	std::cout << "Hello CMake." << std::endl;
 	return 0;
 }

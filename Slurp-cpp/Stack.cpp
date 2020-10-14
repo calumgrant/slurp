@@ -37,6 +37,24 @@ inline void slurp::Stack::Append(const void* d, size_type s)
 	data.insert(data.end(), (const char*)d, (const char*)d + s);
 }
 
+inline void slurp::Stack::Append(size_type s)
+{
+	data.resize(data.size() + s);
+}
+
+void slurp::Stack::Shift(short kind, const TokenData& td, unsigned length)
+{
+	unsigned newSize = length + sizeof(TokenData) + sizeof(Node) + 1;
+	data.reserve(data.size() + newSize);
+
+	Append(&td, sizeof(TokenData));
+	Append(length);
+	data.push_back(0);
+	Node node(kind, 0, newSize);
+	Append(&node, sizeof(Node));
+}
+
+
 void slurp::Stack::Reduce(short kind, unsigned short numberOfChildren)
 {
 	assert(numberOfChildren > 0);
@@ -79,4 +97,14 @@ void slurp::Stack::DumpTree(const Node& node, int indent)
 		for (int i = 0; i < node.size(); ++i)
 			DumpTree(node[i], indent + 2);
 	}
+}
+
+unsigned slurp::Stack::Top() const
+{
+	return (unsigned)data.size();
+}
+
+void slurp::Stack::Unwind(unsigned size)
+{
+	data.resize(size);
 }

@@ -16,3 +16,6 @@
 #include "follows.hpp"
 #include "closure.hpp"
 #include "parser_construction.hpp"
+
+#include "tokenizer.hpp"
+#include "recursive_descent.hpp"

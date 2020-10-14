@@ -50,11 +50,27 @@ namespace slurp
 		*/
 		void Shift(short kind, const TokenData& data, const char* text, unsigned textLength);
 
+		// ?? How to convert non-ascii tokens??
+		template<typename It>
+		void Shift(short kind, const TokenData& data, It start, It end)
+		{
+			// !! Check overflows
+			Shift(kind, data, (unsigned)(end - start));  // !! copy thee data
+		}
+
+		void Shift(short kind, const TokenData& data, unsigned length);
+
 		void DumpTree() const;
+		typedef unsigned size_type;
+
+		size_type Top() const;
+
+		// Unwinds the stack to a position previously given by Top();
+		void Unwind(size_type position);
 
 	private:
-		typedef unsigned size_type;
 		void Append(const void* src, size_type length);
+		void Append(size_type length);
 		static void DumpTree(const Node& node, int indent);
 
 		std::vector<char> data;
