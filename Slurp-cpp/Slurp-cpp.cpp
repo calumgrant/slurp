@@ -326,6 +326,7 @@ namespace RD
 	{
 		typedef Rules<
 			Digit,
+			// Rule<'i', Digit, Digit>//,
 			Rule<'i', Digit, Integer>
 		> rule;
 	};
@@ -340,8 +341,24 @@ namespace RD
 	}
 }
 
+struct Test
+{
+	typedef Test member;
+};
+
+template<typename T>
+struct foo
+{
+	static void parse() {
+		return foo<T::member>::parse();
+	}
+};
+
 int main()
 {
+
+	// foo<Test>::parse();
+
 	ManualTableExample::examplelr();
 	TestStack();
 	PrintStuff();

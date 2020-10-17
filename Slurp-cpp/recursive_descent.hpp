@@ -14,16 +14,27 @@ namespace slurp
 		parserfn fn;
 	};
 
-	template<typename Symbol>
-	struct recursive_descent : public recursive_descent<typename Symbol::rule>
+	template<typename Tokenizer, typename It>
+	struct recursive_continuation
 	{
+		virtual bool call(Tokenizer tok, token_position<It>& pos, Stack& stack ) const=0;
+	};
+
+	template<typename Symbol>
+	struct recursive_descent
+	{
+		template<typename Tokenizer, typename It>
+		static bool parse(Tokenizer tok, token_position<It>& pos, Stack& stack, const recursive_continuation<Tokenizer,It> & next)
+		{
+			return recursive_descent<typename Symbol::rule>::parse(tok, pos, stack, next);
+		}
 	};
 
 	template<int Kind, typename T>
 	struct recursive_descent<Token<Kind, T>>
 	{
-		template<typename Tokenizer, typename It, typename Fn>
-		static bool parse(Tokenizer tok, token_position<It>& pos, Stack& stack, Fn next)
+		template<typename Tokenizer, typename It>
+		static bool parse(Tokenizer tok, token_position<It>& pos, Stack& stack, const recursive_continuation<Tokenizer, It>& next)
 		{
 			if (pos.kind == Kind)
 			{
@@ -31,7 +42,7 @@ namespace slurp
 				stack.Shift(Kind, pos.data, pos.begin(), pos.end());
 				tok.MoveNext(pos);
 
-				return next(tok, pos, stack);
+				return next.call(tok, pos, stack);
 			}
 			return false;
 		}
@@ -40,19 +51,19 @@ namespace slurp
 	template<int Kind>
 	struct recursive_descent<Rule<Kind>>
 	{
-		template<typename Tokenizer, typename It, typename Fn>
-		static bool parse(Tokenizer tok, token_position<It>& pos, Stack& stack, Fn next)
+		template<typename Tokenizer, typename It>
+		static bool parse(Tokenizer tok, token_position<It>& pos, Stack& stack, const recursive_continuation<Tokenizer, It>& next)
 		{
 			stack.Shift(Kind, t.data, 0);  // A node with no children
-			return next(tok, pos, stack);
+			return next.call(tok, pos, stack);
 		}
 	};
 
 	template<>
 	struct recursive_descent<Rules<>>
 	{
-		template<typename Tokenizer, typename It, typename Next>
-		static bool parse(Tokenizer, token_position<It>& t, Stack& stack, Next next)
+		template<typename Tokenizer, typename It>
+		static bool parse(Tokenizer, token_position<It>& t, Stack& stack, const recursive_continuation<Tokenizer, It>& next)
 		{
 			return false;
 		}
@@ -61,8 +72,8 @@ namespace slurp
 	template<typename H, typename... Ts>
 	struct recursive_descent<Rules<H, Ts...>>
 	{
-		template<typename Tokenizer, typename It, typename Fn>
-		static bool parse(Tokenizer tok, token_position<It>& pos, Stack& stack, Fn next)
+		template<typename Tokenizer, typename It>
+		static bool parse(Tokenizer tok, token_position<It>& pos, Stack& stack, const recursive_continuation<Tokenizer, It>& next)
 		{
 			auto save1 = pos;
 			auto save2 = stack.Top();
@@ -72,6 +83,7 @@ namespace slurp
 			// Rewind the stack and the tokenizer
 			pos = save1;
 			stack.Unwind(save2);
+			// return true;
 			return recursive_descent<Rules<Ts...>>::parse(tok, pos, stack, next);
 		};
 	};
@@ -84,33 +96,59 @@ namespace slurp
 	template<int Node, int Children>
 	struct recursive_descent_rule<Node, Children>
 	{
-		template<typename Tokenizer, typename It, typename Next>
-		static bool parse(Tokenizer tok, token_position<It>& pos, Stack& stack, Next next)
+		template<typename Tokenizer, typename It>
+		static bool parse(Tokenizer tok, token_position<It>& pos, Stack& stack, const recursive_continuation<Tokenizer, It>& next)
 		{
 			// Successful reduction - there are Children items on the stack
 			stack.Reduce(Node, Children);
-			return next(tok, pos, stack);
+			return next.call(tok, pos, stack);
 		}
 	};
 
 	template<int Node, int Children, typename H, typename...Ts>
 	struct recursive_descent_rule<Node, Children, H, Ts...>
 	{
-		template<typename Tokenizer, typename It, typename Next>
-		static bool parse(Tokenizer tok, token_position<It>& pos, Stack& stack, Next next)
+
+		template<typename Tokenizer, typename It>
+		class recursive_call : public recursive_continuation<Tokenizer, It>
 		{
-			return recursive_descent<H>::parse(tok, pos, stack, [&next](Tokenizer & tok2, token_position<It>& pos2, Stack& stack2)
-				{
-					return true;
-					// return recursive_descent_rule<Node, Children + 1, Ts...>::parse(tok2, pos2, stack2, next);
-				});
+		public:
+			recursive_call(const recursive_continuation<Tokenizer, It>& next) : m_next(next) { }
+
+			const recursive_continuation<Tokenizer, It>& m_next;
+
+			bool call(Tokenizer tok, token_position<It>& pos, Stack& stack) const
+			{
+				return recursive_descent_rule<Node, Children + 1, Ts...>::parse(tok, pos, stack, m_next);
+			};
+		};
+
+		template<typename Tokenizer, typename It>
+		static bool parse(Tokenizer tok, token_position<It>& pos, Stack& stack, const recursive_continuation<Tokenizer, It>& next)
+		{
+			return recursive_descent<H>::parse(tok, pos, stack, recursive_call<Tokenizer, It>(next));
 		}
 	};
 
 
 	template<int Node, typename...Ts>
-	struct recursive_descent<Rule<Node, Ts...>> : public recursive_descent_rule<Node, 0, Ts...>
+	struct recursive_descent<Rule<Node, Ts...>>
 	{
+		template<typename Tokenizer, typename It>
+		static bool parse(Tokenizer tok, token_position<It>& pos, Stack& stack, const recursive_continuation<Tokenizer, It>& next)
+		{
+			return recursive_descent_rule<Node, 0, Ts...>::parse(tok, pos, stack, next);
+		}
+	};
+
+	template<typename Tokenizer, typename It>
+	class recursive_descent_eof : public recursive_continuation<Tokenizer, It>
+	{
+	public:
+		bool call(Tokenizer tok, token_position<It>& pos, Stack &stack) const override
+		{
+			return pos.kind == -1;
+		}
 	};
 
 	template<typename Grammar, typename Tokenizer, typename It> Stack recursive_descent2(Tokenizer tok, It a, It b)
@@ -119,12 +157,7 @@ namespace slurp
 		Stack result;
 		tok.MoveNext(pos);
 
-		recursive_descent<Grammar>::parse(tok, pos, result, [](Tokenizer tok2, token_position<It> pos2, Stack& stack)
-			{
-				return pos2.kind == -1;
-			}
-		);
-
+		recursive_descent<Grammar>::parse(tok, pos, result, recursive_descent_eof<Tokenizer, It>());
 
 		// if(recursive_descent<Grammer>::parse(t.
 
