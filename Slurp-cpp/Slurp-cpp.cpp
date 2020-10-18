@@ -337,7 +337,12 @@ namespace RD
 		null_tokenizer tok;
 
 		char input[] = "ddx";
-		auto p = recursive_descent2<Integer>(tok, input, input + 2);
+		auto p = recursive_descent<Integer>(tok, input, input + 2);
+		assert(p);
+		assert(p.root().Kind == 'i');
+		p = recursive_descent<Integer>(tok, input, input + 3);
+		assert(!p);
+
 		p.DumpTree();
 	}
 }

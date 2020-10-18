@@ -225,9 +225,21 @@ namespace RecusiveTests
 		typedef Rule<123, Expr4> rule;
 	};
 
+	struct Expr5
+	{
+		typedef Rule<123, Rule<124>, Expr5> rule;
+	};
+
+	struct Expr6
+	{
+		typedef Rule<123, Token<124, Ch<'x'>>, Expr6> rule;
+	};
+
 
 	static_assert(!front_recursive<Expr>::value, "Expr is front-recursive");
 	static_assert(front_recursive<Expr2>::value, "Expr is front-recursive");
 	static_assert(front_recursive<Expr3>::value, "Expr is front-recursive");
 	static_assert(front_recursive<Expr4>::value, "Expr is front-recursive");
+	static_assert(front_recursive<Expr5>::value, "Expr is front-recursive");
+	static_assert(!front_recursive<Expr6>::value, "Expr is front-recursive");
 };

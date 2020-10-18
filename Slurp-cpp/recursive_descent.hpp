@@ -2,17 +2,43 @@
 
 namespace slurp
 {
+	class parse_result
+	{
+	public:
+
+		// True if the parse was successful and 
+		operator bool() const;
+
+		void DumpTree() const;
+
+		// Gets the root of the parse tree.
+		// Undefined if the parse has not completed successfully.
+		const Node& root() const;
+
+		TokenData syntaxError;
+
+		parse_result();
+
+		// Constucts a parse result containing a successful parse tree
+		parse_result(Stack&& stack);
+
+		~parse_result();
+	private:
+		Stack stack;
+	};
+
 
 	template<typename It>
 	class parser
 	{
 	public:
-		typedef Stack(*parserfn)(It a, It b);
+		typedef parse_result(*parserfn)(It a, It b);
 		parser(parserfn fn) : fn(fn) {}
 
 		// A parser is a function that tokenizes a stream and returns an abstract syntax tree.
 		parserfn fn;
 	};
+
 
 
 
@@ -213,9 +239,7 @@ namespace slurp
 	}
 
 
-
-
-	template<typename Grammar, typename Tokenizer, typename It> Stack recursive_descent2(Tokenizer tok, It a, It b)
+	template<typename Grammar, typename Tokenizer, typename It> parse_result recursive_descent(Tokenizer tok, It a, It b)
 	{
 		static_assert(!front_recursive<Grammar>::value, "Grammar for recursive descent parser is front-recursive");
 
@@ -223,13 +247,11 @@ namespace slurp
 		Stack result;
 		tok.MoveNext(pos);
 
-		helpers::recursive_descent<Grammar>::parse(tok, pos, result, helpers::recursive_descent_eof<Tokenizer, It>());
+		if (helpers::recursive_descent<Grammar>::parse(tok, pos, result, helpers::recursive_descent_eof<Tokenizer, It>()))
+			return result;
 
-		// if(recursive_descent<Grammer>::parse(t.
-
-		return result;
+		return parse_result();
 	}
-
 
 
 	template<typename Grammar, typename It>

@@ -108,3 +108,8 @@ void slurp::Stack::Unwind(unsigned size)
 {
 	data.resize(size);
 }
+
+bool slurp::Stack::Empty() const
+{
+	return data.empty();
+}

@@ -68,6 +68,8 @@ namespace slurp
 		// Unwinds the stack to a position previously given by Top();
 		void Unwind(size_type position);
 
+		bool Empty() const;
+
 	private:
 		void Append(const void* src, size_type length);
 		void Append(size_type length);
