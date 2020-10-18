@@ -328,6 +328,7 @@ namespace RD
 			Digit,
 			// Rule<'i', Digit, Digit>//,
 			Rule<'i', Digit, Integer>
+			// Rule<'i', Integer, Digit>
 		> rule;
 	};
 
@@ -335,8 +336,8 @@ namespace RD
 	{
 		null_tokenizer tok;
 
-		char input[] = "ddd";
-		auto p = recursive_descent2<Integer>(tok, input, input + 3);
+		char input[] = "ddx";
+		auto p = recursive_descent2<Integer>(tok, input, input + 2);
 		p.DumpTree();
 	}
 }

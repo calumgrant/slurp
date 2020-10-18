@@ -200,3 +200,34 @@ namespace ExpandTests
 {
 
 }
+
+namespace RecusiveTests
+{
+	struct Expr
+	{
+		typedef Rules<
+			Token<123, Ch<'x'>>
+		> rule;
+	};
+
+	struct Expr2
+	{
+		typedef Expr2 rule;
+	};
+
+	struct Expr3
+	{
+		typedef Rules<Expr3> rule;
+	};
+
+	struct Expr4
+	{
+		typedef Rule<123, Expr4> rule;
+	};
+
+
+	static_assert(!front_recursive<Expr>::value, "Expr is front-recursive");
+	static_assert(front_recursive<Expr2>::value, "Expr is front-recursive");
+	static_assert(front_recursive<Expr3>::value, "Expr is front-recursive");
+	static_assert(front_recursive<Expr4>::value, "Expr is front-recursive");
+};
