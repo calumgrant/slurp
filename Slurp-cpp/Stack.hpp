@@ -48,17 +48,16 @@ namespace slurp
 		/*
 			Shifts (pushes) a new token node onto the stack.
 		*/
-		void Shift(short kind, const TokenData& data, const char* text, unsigned textLength);
 
-		// ?? How to convert non-ascii tokens??
 		template<typename It>
 		void Shift(short kind, const TokenData& data, It start, It end)
 		{
-			// !! Check overflows
-			Shift(kind, data, (unsigned)(end - start));  // !! copy thee data
+			wchar_t * text = Shift(kind, data, (unsigned)(end - start));
+			for (It s = start; s != end; ++s)
+				*text++ = *s;
 		}
 
-		void Shift(short kind, const TokenData& data, unsigned length);
+		wchar_t *Shift(short kind, const TokenData& data, unsigned length);
 
 		void DumpTree() const;
 		typedef unsigned size_type;

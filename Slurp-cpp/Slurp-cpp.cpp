@@ -92,14 +92,15 @@ void TestStack()
 	Stack stack;
 	TokenData d;
 
-	stack.Shift(1, d, "hello", 5);
+	char hello[] = "hello";
+	stack.Shift(1, d, hello, hello + 5);
 
 	{
 		const Node& top = stack.Root();
 		assert(top.Kind == 1);
 		assert(top.IsToken());
-		assert(top.TextLength() == 5);
-		assert(strcmp(top.Text(), "hello") == 0);
+		assert(top.WTextLength() == 5);
+		assert(top.Str() == L"hello");
 	}
 
 	stack.Reduce(2, 1);
@@ -113,12 +114,13 @@ void TestStack()
 		const Node& c = top[0];
 		assert(c.IsToken());
 		assert(c.Kind == 1);
-		assert(strcmp(c.Text(), "hello") == 0);
+		assert(c.Str() == L"hello");
 	}
 
-	stack.Shift(2, d, "World!", 6);
+	char world[] = "World!";
+	stack.Shift(2, d, world, world+6);
 
-	stack.Shift(3, d, "World!", 6);
+	stack.Shift(3, d, world, world+6);
 	stack.Reduce(10, 3);
 
 	{
@@ -339,11 +341,17 @@ namespace RD
 		char input[] = "ddx";
 		auto p = recursive_descent<Integer>(tok, input, input + 2);
 		assert(p);
-		assert(p.root().Kind == 'i');
+		assert(p.root() == 'i');
+		assert(p.root().size() == 2);
+		assert(p.root()[0] == 'd');
+		assert(p.root()[0] == 'd');
+
+		// Check the token text in the result
+		// Check the positional offsets in the text
+		// TODO
+
 		p = recursive_descent<Integer>(tok, input, input + 3);
 		assert(!p);
-
-		p.DumpTree();
 	}
 }
 

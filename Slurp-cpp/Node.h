@@ -1,13 +1,13 @@
 #pragma once
 #include <cassert>
+#include <string>
 
 namespace slurp
 {
 	struct TokenData
 	{
-		unsigned offset, row, column;
+		unsigned offset, length, row, column;
 	};
-
 
 	/*
 		A node in the parse tree.
@@ -65,6 +65,11 @@ namespace slurp
 
 		unsigned short size() const { return numberOfChildren; }
 
+		bool operator==(int kind) const
+		{
+			return Kind == kind;
+		}
+
 		const Node& operator[](unsigned short index) const
 		{
 			assert(index < numberOfChildren);
@@ -108,11 +113,18 @@ namespace slurp
 
 		typedef unsigned size_type;
 
-		size_type TextLength() const { return IsToken() ? length - sizeof(Node) - sizeof(TokenData) -1 : 0; }
+		//size_type TextLength() const { return IsToken() ? length - sizeof(Node) - sizeof(TokenData) -1 : 0; }
 
-		const char* Text() const { return IsToken() ? (const char*)(GetToken() + 1) : ""; }
+		//const char* Text() const { return IsToken() ? (const char*)(GetToken() + 1) : ""; }
 
-		// Size
+		const wchar_t* WText() const { return IsToken() ? (const wchar_t*)(GetToken() + 1) : L""; }
+
+		size_type WTextLength() const { return IsToken() ? (length - sizeof(Node) - sizeof(TokenData))/sizeof(wchar_t) - 1 : 0; }
+
+		std::wstring Str() const {
+			return std::wstring(WText());
+		}
+
 	private:
 		const void* data() const { return (const char*)(this) - length + sizeof(Node); }
 	};

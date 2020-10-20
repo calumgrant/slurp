@@ -18,4 +18,5 @@
 #include "parser_construction.hpp"
 
 #include "tokenizer.hpp"
+#include "parse_result.hpp"
 #include "recursive_descent.hpp"

@@ -2,30 +2,7 @@
 
 namespace slurp
 {
-	class parse_result
-	{
-	public:
 
-		// True if the parse was successful and 
-		operator bool() const;
-
-		void DumpTree() const;
-
-		// Gets the root of the parse tree.
-		// Undefined if the parse has not completed successfully.
-		const Node& root() const;
-
-		TokenData syntaxError;
-
-		parse_result();
-
-		// Constucts a parse result containing a successful parse tree
-		parse_result(Stack&& stack);
-
-		~parse_result();
-	private:
-		Stack stack;
-	};
 
 
 	template<typename It>
