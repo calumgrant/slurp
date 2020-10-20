@@ -218,8 +218,6 @@ namespace slurp
 
 	template<typename Grammar, typename Tokenizer, typename It> parse_result recursive_descent(Tokenizer tok, It a, It b)
 	{
-		static_assert(!front_recursive<Grammar>::value, "Grammar for recursive descent parser is front-recursive");
-
 		token_position<It> pos(a, b);
 		Stack result;
 		tok.MoveNext(pos);

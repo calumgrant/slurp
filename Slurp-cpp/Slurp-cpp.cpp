@@ -6,6 +6,8 @@
 #include "slurp.hpp"
 #include "prettyprint.hpp"
 
+#include <sstream>
+
 namespace slurp
 {
 
@@ -328,9 +330,7 @@ namespace RD
 	{
 		typedef Rules<
 			Digit,
-			// Rule<'i', Digit, Digit>//,
 			Rule<'i', Digit, Integer>
-			// Rule<'i', Integer, Digit>
 		> rule;
 	};
 
@@ -352,6 +352,21 @@ namespace RD
 
 		p = recursive_descent<Integer>(tok, input, input + 3);
 		assert(!p);
+
+		//Test a long string
+		{
+			std::stringstream ss;
+
+			// Stack overflow problem!!
+			for (int i = 0; i < 10000; ++i)
+				ss << 'd';
+
+			auto s = ss.str();
+			p = recursive_descent<Integer>(tok, s.begin(), s.end());
+			assert(p);
+///			p.DumpTree();
+		}
+
 	}
 }
 
