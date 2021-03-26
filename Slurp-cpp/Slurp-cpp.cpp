@@ -340,11 +340,19 @@ namespace RD
 
 		char input[] = "ddx";
 		auto p = recursive_descent<Integer>(tok, input, input + 2);
+		auto q = recursive_descent2<Integer>(tok, input, input + 2);
+
 		assert(p);
 		assert(p.root() == 'i');
 		assert(p.root().size() == 2);
 		assert(p.root()[0] == 'd');
 		assert(p.root()[0] == 'd');
+
+		assert(q);
+		assert(q.root() == 'i');
+		assert(q.root().size() == 2);
+		assert(q.root()[0] == 'd');
+		assert(q.root()[0] == 'd');
 
 		// Check the token text in the result
 		// Check the positional offsets in the text

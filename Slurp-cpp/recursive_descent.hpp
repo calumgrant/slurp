@@ -1,10 +1,9 @@
 #pragma once
 
+#include <stack>
+
 namespace slurp
 {
-
-
-
 	template<typename It>
 	class parser
 	{
@@ -81,6 +80,97 @@ namespace slurp
 			virtual bool call(Tokenizer tok, token_position<It>& pos, Stack& stack) const = 0;
 		};
 
+		template<typename Tokenizer, typename It>
+		class recursive_stack
+		{
+			Tokenizer tokenizer;
+			Stack stack;
+			typedef void(*parse_fn)(recursive_stack<Tokenizer, It>&);
+
+			std::stack<parse_fn> fnstack;
+
+			bool m_success;
+
+			struct rewindpoint
+			{
+				unsigned stack_size;
+				std::size_t fnstacksize;
+				parse_fn fn;
+			};
+			std::stack<rewindpoint> choicepoints;
+			token_position<It> pos;
+		public:
+
+			bool istoken(short kind)
+			{
+				return pos.kind == kind;
+			}
+
+			void reduce(short kind, int children)
+			{
+				stack.Reduce(kind, children);
+			}
+
+			recursive_stack(parse_fn init, Tokenizer tok, token_position<It> first_token)
+			{
+				tokenizer = tok;
+				pos = first_token;
+				push_next(init);
+				m_success = false;
+				tok.MoveNext(pos);
+			}
+
+			void push_next(parse_fn fn)
+			{
+				fnstack.push(fn);
+			}
+
+			void shift_token()
+			{
+				stack.Shift(pos.kind, pos.data, pos.begin(),pos.end());
+			}
+
+			void push_rewind(parse_fn next)
+			{
+				choicepoints.push(rewindpoint{ stack.Top(), fnstack.size(), next });
+			}
+
+			void rewind()
+			{
+				auto top = choicepoints.top();
+				choicepoints.pop();
+				// fnstack.resize(top.fnstacksize);
+				while (fnstack.size() > top.fnstacksize)
+					fnstack.pop();
+
+				stack.Unwind(top.stack_size);
+				push_next(top.fn);
+			}
+
+			void success()
+			{
+				m_success = true;
+			}
+
+
+			parse_result parse()
+			{
+				while (fnstack.size() > 0)
+				{
+					parse_fn fn = fnstack.top();
+					fnstack.pop();
+					(*fn)(*this);
+					if (m_success) return std::move(stack);
+				}
+				return parse_result();
+			}
+
+			parse_result result()
+			{
+				return stack;
+			}
+		};
+
 		template<typename Symbol>
 		struct recursive_descent
 		{
@@ -91,6 +181,13 @@ namespace slurp
 			{
 				return recursive_descent<typename Symbol::rule>::parse(tok, pos, stack, next);
 			}
+
+			template<typename Tokenizer, typename It>
+			static void parse2(recursive_stack<Tokenizer, It>& stack)
+			{
+				stack.push_next(recursive_descent<typename Symbol::rule>::parse2);
+			}
+
 		};
 
 		template<int Kind, typename T>
@@ -109,6 +206,16 @@ namespace slurp
 				}
 				return false;
 			}
+
+			template<typename Tokenizer, typename It>
+			static void parse2(recursive_stack<Tokenizer, It>& stack)
+			{
+				if (stack.istoken(Kind))
+					stack.shift_token();
+				else
+					stack.rewind();
+			}
+
 		};
 
 		template<int Kind>
@@ -120,6 +227,12 @@ namespace slurp
 				stack.Shift(Kind, t.data, 0);  // A node with no children
 				return next.call(tok, pos, stack);
 			}
+
+			template<typename Tokenizer, typename It>
+			static void parse2(recursive_stack<Tokenizer, It>& stack)
+			{
+				stack.shift_empty_rule(Kind);
+			}
 		};
 
 		template<>
@@ -129,6 +242,11 @@ namespace slurp
 			static bool parse(Tokenizer, token_position<It>& t, Stack& stack, const recursive_continuation<Tokenizer, It>& next)
 			{
 				return false;
+			}
+
+			template<typename Tokenizer, typename It>
+			static void parse2(recursive_stack<Tokenizer, It>& stack)
+			{
 			}
 		};
 
@@ -149,6 +267,13 @@ namespace slurp
 				// return true;
 				return recursive_descent<Rules<Ts...>>::parse(tok, pos, stack, next);
 			};
+
+			template<typename Tokenizer, typename It>
+			static void parse2(recursive_stack<Tokenizer, It>& stack)
+			{
+				stack.push_rewind(recursive_descent<Rules<Ts...>>::parse2);
+				stack.push_next(recursive_descent<H>::parse2);
+			}
 		};
 
 		template<int Node, int Children, typename... Ts>
@@ -165,6 +290,12 @@ namespace slurp
 				// Successful reduction - there are Children items on the stack
 				stack.Reduce(Node, Children);
 				return next.call(tok, pos, stack);
+			}
+
+			template<typename Tokenizer, typename It>
+			static void parse2(recursive_stack<Tokenizer, It>& stack)
+			{
+				stack.reduce(Node, Children);
 			}
 		};
 
@@ -191,6 +322,14 @@ namespace slurp
 			{
 				return recursive_descent<H>::parse(tok, pos, stack, recursive_call<Tokenizer, It>(next));
 			}
+
+			template<typename Tokenizer, typename It>
+			static void parse2(recursive_stack<Tokenizer, It>& stack)
+			{
+				stack.push_next(recursive_descent<H>::parse2);
+				stack.push_next(recursive_descent_rule<Node, Children + 1, Ts...>::parse2);
+			}
+
 		};
 
 
@@ -201,6 +340,12 @@ namespace slurp
 			static bool parse(Tokenizer tok, token_position<It>& pos, Stack& stack, const recursive_continuation<Tokenizer, It>& next)
 			{
 				return recursive_descent_rule<Node, 0, Ts...>::parse(tok, pos, stack, next);
+			}
+
+			template<typename Tokenizer, typename It>
+			static void parse2(recursive_stack<Tokenizer, It>& stack)
+			{
+				recursive_descent_rule<Node, 0, Ts...>::parse2(stack);
 			}
 		};
 
@@ -215,7 +360,7 @@ namespace slurp
 		};
 	}
 
-
+	// Stack-based version do not use
 	template<typename Grammar, typename Tokenizer, typename It> parse_result recursive_descent(Tokenizer tok, It a, It b)
 	{
 		token_position<It> pos(a, b);
@@ -226,6 +371,13 @@ namespace slurp
 			return result;
 
 		return parse_result();
+	}
+
+	template<typename Grammar, typename Tokenizer, typename It> parse_result recursive_descent2(Tokenizer tok, It a, It b)
+	{
+		helpers::recursive_stack<Tokenizer, It> stack(helpers::recursive_descent<Grammar>::parse2, tok, token_position<It>(a,b));
+
+		return stack.parse();
 	}
 
 

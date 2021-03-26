@@ -6,6 +6,10 @@ namespace slurp
 	{
 	public:
 
+		token_position() : kind(-1)
+		{
+		}
+
 		token_position(It stream_start, It stream_end) : tok_end(stream_start), stream_end(stream_end)
 		{ 
 		}
